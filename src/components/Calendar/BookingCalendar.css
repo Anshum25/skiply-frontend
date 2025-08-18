@@ -1,0 +1,29 @@
+.calendar-day.greyed-out {
+  background-color: #f3f4f6 !important; /* Tailwind gray-100 */
+  color: #6b7280 !important; /* Tailwind gray-500, darker for better visibility */
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  opacity: 1;
+  border-color: #e5e7eb !important; /* Tailwind gray-200 */
+  transition: background 0.2s;
+}
+@media (prefers-color-scheme: dark) {
+  .calendar-day.greyed-out {
+    background-color: #374151 !important; /* Tailwind gray-700 */
+    color: #d1d5db !important; /* Tailwind gray-300, lighter for dark mode */
+    border-color: #4b5563 !important; /* Tailwind gray-600 */
+  }
+}
+
+/* Make the selected day number brighter */
+.calendar-day.selected .text-sm {
+  color: #2563eb !important; /* Tailwind blue-600 */
+  font-weight: bold;
+  text-shadow: 0 0 4px #60a5fa44; /* subtle blue glow */
+}
+@media (prefers-color-scheme: dark) {
+  .calendar-day.selected .text-sm {
+    color: #60a5fa !important; /* Tailwind blue-400 */
+    text-shadow: 0 0 6px #1e40af88;
+  }
+}

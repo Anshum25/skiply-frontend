@@ -285,9 +285,7 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
 
   const resolvedImageUrl =
     business.images && business.images.length > 0
-      ? (business.images[0].startsWith("http") || business.images[0].startsWith("/")
-          ? business.images[0]
-          : `http://localhost:5050/uploads/${business.images[0]}`)
+      ? business.images[0]
       : "/no-image.jpg";
 
   return (

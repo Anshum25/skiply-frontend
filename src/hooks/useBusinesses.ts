@@ -7,7 +7,7 @@ export function useBusinesses() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:5050/api/businesses/all")
+    fetch(`${import.meta.env.VITE_API_URL}/api/businesses/all`)
       .then((res) => res.json())
       .then((data) => {
         setBusinesses(data);

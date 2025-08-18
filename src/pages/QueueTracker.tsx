@@ -127,7 +127,7 @@ const QueueTracker: React.FC = () => {
           // Try API first
           if (token) {
             try {
-              const res = await fetch("http://localhost:5050/api/queues/my-bookings", {
+              const res = await fetch(`${import.meta.env.VITE_API_URL}/api/queues/my-bookings`, {
                 headers: {
                   "Authorization": `Bearer ${token}`,
                 },

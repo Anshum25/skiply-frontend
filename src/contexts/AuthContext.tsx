@@ -56,8 +56,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<{ user: User; token: string }> => {
     const endpoint =
       role === "business"
-        ? "http://localhost:5050/api/businesses/login"
-        : "http://localhost:5050/api/auth/login";
+        ? `${import.meta.env.VITE_API_URL}/api/businesses/login`
+        : `${import.meta.env.VITE_API_URL}/api/auth/login`;
 
     const res = await fetch(endpoint, {
       method: "POST",

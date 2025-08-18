@@ -168,8 +168,8 @@ const UserHome: React.FC = () => {
   useEffect(() => {
     const fetchBusinesses = async () => {
       let url = filters.openNow
-        ? "http://localhost:5050/api/businesses/open"
-        : "http://localhost:5050/api/businesses/all";
+        ? `${import.meta.env.VITE_API_URL}/api/businesses/open`
+        : `${import.meta.env.VITE_API_URL}/api/businesses/all`;
       try {
         const res = await fetch(url);
         const data = await res.json();

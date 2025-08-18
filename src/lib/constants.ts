@@ -24,15 +24,9 @@ export const QUEUE_STATUS_COLORS = {
 
 export const DEFAULT_LOCATION = "New York, NY";
 
-export const API_BASE_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://your-api-url.com/api"
-    : "http://localhost:5000/api";
+export const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
 
-export const SOCKET_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://your-api-url.com"
-    : "http://localhost:5000";
+export const SOCKET_URL = import.meta.env.VITE_API_URL.replace(/\/api$/, "");
 
 export const ITEMS_PER_PAGE = 12;
 

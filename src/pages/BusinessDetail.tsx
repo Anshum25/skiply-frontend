@@ -78,7 +78,7 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
     const fetchBusiness = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5050/api/businesses/${id}`
+          `${import.meta.env.VITE_API_URL}/api/businesses/${id}`
         );
         const fetchedBusiness = response.data;
 

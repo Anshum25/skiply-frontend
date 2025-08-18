@@ -346,7 +346,7 @@ const SignupBusiness: React.FC = () => {
       imageFormData.append("image", image);
 
       // Replace with your actual image upload endpoint
-      const response = await axios.post("http://localhost:5050/api/upload", imageFormData, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/upload`, imageFormData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

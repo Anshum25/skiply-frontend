@@ -129,7 +129,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
       
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        "http://localhost:5050/api/queues/book",
+        `${import.meta.env.VITE_API_URL}/api/queues/book`,
         bookingPayload,
         { headers: { Authorization: `Bearer ${token}` } }
       );

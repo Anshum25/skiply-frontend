@@ -470,51 +470,50 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
           </div>
           <div className="grid grid-cols-7 gap-1">
             {getDaysInMonth(currentDate).map((date, index) => {
-              console.log(`Calendar day ${index}:`, date, date ? date.getDate() : 'null');
+              // Restrict booking to today up to end of next month
+              const today = new Date();
+              today.setHours(0,0,0,0);
+              const endOfNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0); // last day of next month
+              const isDisabled = !date || date < today || date > endOfNextMonth;
               return (
-              <motion.div
-                key={index}
-                whileHover={date && !(date < new Date('2025-07-22T00:00:00+05:30')) ? { scale: 1.05 } : {}}
-                whileTap={date && !(date < new Date('2025-07-22T00:00:00+05:30')) ? { scale: 0.95 } : {}}
-                className={`h-20 border border-gray-200 dark:border-gray-700 rounded-lg ${
-                  date
-                    ? (date < new Date('2025-07-22T00:00:00+05:30')
-                        ? "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 cursor-not-allowed pointer-events-none greyed-out"
-                        : "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                      )
-                    : ""
-                } ${getDayClass(date)}`}
-                onClick={() => date && !(date < new Date('2025-07-22T00:00:00+05:30')) && handleDateSelect(date)}
-              >
-                {date && (
-                  <div className="p-2 h-full flex flex-col">
-                    <span className="text-sm font-medium text-foreground dark:text-white">
-                      {date.getDate()}
-                    </span>
-                    <div className="flex-1 flex items-end">
-                      <div className="w-full">
-                        {/* Only show queue number if NOT a past date */}
-                        {(() => {
-                          const today = new Date("2025-07-22T10:51:27+05:30");
-                          today.setHours(0,0,0,0);
-                          if (date >= today && getBookingCountForDate(date) > 0) {
-                            return (
-                              <Badge
-                                variant="secondary"
-                                className="text-xs w-full justify-center"
-                              >
-                                {getBookingCountForDate(date)}
-                              </Badge>
-                            );
-                          }
-                          return null;
-                        })()}
+                <motion.div
+                  key={index}
+                  whileHover={!isDisabled ? { scale: 1.05 } : {}}
+                  whileTap={!isDisabled ? { scale: 0.95 } : {}}
+                  className={`h-20 border border-gray-200 dark:border-gray-700 rounded-lg ${
+                    isDisabled
+                      ? "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 cursor-not-allowed pointer-events-none greyed-out"
+                      : "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                  } ${getDayClass(date)}`}
+                  onClick={() => !isDisabled && handleDateSelect(date!)}
+                >
+                  {date && (
+                    <div className="p-2 h-full flex flex-col">
+                      <span className="text-sm font-medium text-foreground dark:text-white">
+                        {date.getDate()}
+                      </span>
+                      <div className="flex-1 flex items-end">
+                        <div className="w-full">
+                          {/* Only show queue number if NOT a past date */}
+                          {(() => {
+                            if (date >= today && getBookingCountForDate(date) > 0) {
+                              return (
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs w-full justify-center"
+                                >
+                                  {getBookingCountForDate(date)}
+                                </Badge>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </motion.div>
-            );
+                  )}
+                </motion.div>
+              );
             })}
           </div>
         </CardContent>

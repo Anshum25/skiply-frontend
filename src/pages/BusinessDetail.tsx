@@ -454,7 +454,7 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
                 </Button>
               )}
 
-              <Button className="btn-gradient" onClick={handleBookNow}>
+              <Button className="btn-gradient" onClick={handleBookNow} disabled={!openStatus} title={!openStatus ? "Business is closed" : undefined}>
                 <Calendar className="w-4 h-4 mr-2" />
                 Book Now (Live)
               </Button>

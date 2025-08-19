@@ -6,7 +6,8 @@ export function useBusinesses() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchBusinesses = () => {
+    setLoading(true);
     fetch(`${import.meta.env.VITE_API_URL}/api/businesses/all`)
       .then((res) => res.json())
       .then((data) => {
@@ -17,7 +18,11 @@ export function useBusinesses() {
         console.error("Error fetching businesses:", error);
         setLoading(false);
       });
+  };
+  useEffect(() => {
+    fetchBusinesses();
   }, []);
+  return { businesses, loading, refetchBusinesses: fetchBusinesses };
 
   return { businesses, loading };
 }

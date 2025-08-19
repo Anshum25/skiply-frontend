@@ -313,7 +313,7 @@ const SignupBusiness: React.FC = () => {
 
       // API request
       const response = await axios.post(
-        "http://localhost:5050/api/businesses/register",
+        `${import.meta.env.VITE_API_URL}/api/businesses/register`,
         formData,
         {
           headers: {

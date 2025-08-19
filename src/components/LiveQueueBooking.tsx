@@ -150,7 +150,7 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
       
       console.log("Sending booking payload:", bookingPayload);
       
-      const res = await fetch("http://localhost:5050/api/queues/book", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/queues/book`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -136,7 +136,7 @@ export const EnhancedBusinessCard: React.FC<EnhancedBusinessCardProps> = ({
                     !imageError && businessImages.length > 0
                       ? (businessImages[0].startsWith("http") || businessImages[0].startsWith("/")
                           ? businessImages[0]
-                          : `http://localhost:5050/uploads/${businessImages[0]}`)
+                          : `${import.meta.env.VITE_API_URL}/uploads/${businessImages[0]}`)
                       : undefined
                   }
                   onError={() => setImageError(true)}
@@ -187,7 +187,7 @@ export const EnhancedBusinessCard: React.FC<EnhancedBusinessCardProps> = ({
                 src={
                   businessImages[0].startsWith("http") || businessImages[0].startsWith("/")
                     ? businessImages[0]
-                    : `http://localhost:5050/uploads/${businessImages[0]}`
+                    : `${import.meta.env.VITE_API_URL}/uploads/${businessImages[0]}`
                 }
                 alt={business.name}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
@@ -257,7 +257,7 @@ export const EnhancedBusinessCard: React.FC<EnhancedBusinessCardProps> = ({
                      !imageError && businessImages.length > 0
                        ? (businessImages[0].startsWith("http") || businessImages[0].startsWith("/")
                            ? businessImages[0]
-                           : `http://localhost:5050/uploads/${businessImages[0]}`)
+                           : `${import.meta.env.VITE_API_URL}/uploads/${businessImages[0]}`)
                        : undefined
                    }
                    onError={() => setImageError(true)}

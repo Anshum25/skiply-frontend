@@ -17,6 +17,7 @@ type AuthContextType = {
     role: string
   ) => Promise<{ user: User; token: string }>;
   logout: () => void;
+  updateProfile: (data: Partial<User>) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -99,8 +100,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(false);
   };
 
+  // Update user profile
+  const updateProfile = async (data: Partial<User>) => {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("Not authenticated");
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to update profile");
+    }
+    // Update local user state
+    const updatedUser = { ...user, ...data, ...result };
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+  };
+
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

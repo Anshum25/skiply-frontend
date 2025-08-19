@@ -286,6 +286,10 @@ const UserHome: React.FC = () => {
     const todayHours = business.openingHours[dayOfWeek];
     if (!todayHours || todayHours.closed) return false;
 
+    // Handle overnight hours (e.g., start: 22:00, end: 06:00)
+    if (todayHours.start > todayHours.end) {
+      return currentTime >= todayHours.start || currentTime <= todayHours.end;
+    }
     return currentTime >= todayHours.start && currentTime <= todayHours.end;
   };
 

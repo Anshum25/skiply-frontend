@@ -1,4 +1,27 @@
+interface Business {
+  _id: string;
+  name: string;
+  businessName?: string;
+  description: string;
+  address: string;
+  ownerId: string;
+  category: BusinessCategory;
+  contact: {
+    phone: string;
+    email: string;
+    website: string;
+  };
+  isVerified: boolean;
+  rating: number;
+  totalReviews: number;
+  openingHours: OpeningHours;
+  coverPhoto: string;
+  logo: string;
+  photos: any[];
+}
 import React, { useState, useEffect } from "react";
+import { useBusinesses } from "../hooks/useBusinesses";
+import axios from "axios";
 import { motion } from "framer-motion";
 import {
   BarChart3,
@@ -169,18 +192,45 @@ const BUSINESS_CATEGORIES = [
 ];
 
 const BusinessDashboard: React.FC = () => {
+  // Only one declaration for user, at the very top
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
-  const [editingProfile, setEditingProfile] = useState(false);
-  const [editingHours, setEditingHours] = useState(false);
+  // Debug: Print token and user on every render
+  console.log("Token from localStorage:", localStorage.getItem("token"));
+  console.log("User from context:", user);
+  // UI state declarations (must be at the top to avoid shadowing)
+  const [activeTab, setActiveTab] = useState<string>("overview");
+  const [editingProfile, setEditingProfile] = useState<boolean>(false);
+  const [editingHours, setEditingHours] = useState<boolean>(false);
+  const [businessBookings, setBusinessBookings] = useState([]);
+  const { refetchBusinesses } = useBusinesses();
+  
+  useEffect(() => {
+    const fetchBusiness = async () => {
+      const businessId = user?.id;
+      if (businessId) {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/businesses/${businessId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setBusiness(res.data);
+        } catch (err) {
+          toast.error("Failed to load business details.");
+        }
+      }
+    };
+    fetchBusiness();
+  }, [user]);
 
-  const [business, setBusiness] = useState({
-    id: "1",
+  const initialBusinessId = user?.id || "";
+  const [business, setBusiness] = useState<Business>({
+    _id: initialBusinessId,
     name: "Sample Business",
+    businessName: "Sample Business",
     description: "This is a sample business description.",
     address: "123 Sample St",
-    ownerId: user?.id || "1",
-    category: "restaurant" as BusinessCategory,
+    ownerId: user?.id || initialBusinessId,
+    category: "restaurant",
     contact: {
       phone: "123-456-7890",
       email: "contact@sample.com",
@@ -203,6 +253,46 @@ const BusinessDashboard: React.FC = () => {
     photos: [],
   });
 
+  useEffect(() => {
+    const fetchBusinessBookings = async () => {
+      const businessId = business?._id || user?.id;
+      if (businessId) {
+        try {
+          const token = localStorage.getItem("token");
+          console.log("Business bookings API token:", token);
+          console.log("Current user:", user);
+          const res = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/queues/business/${businessId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setBusinessBookings(res.data);
+        } catch (err) {
+          toast.error("Failed to load business bookings.");
+        }
+      }
+    };
+    fetchBusinessBookings();
+  }, [business?._id, user?.id]);
+
+  useEffect(() => {
+    const fetchBusinessBookings = async () => {
+      const businessId = business?._id || user?.id;
+      if (businessId) {
+        try {
+          const token = localStorage.getItem("token");
+          const res = await axios.get(
+            `${import.meta.env.VITE_API_URL}/api/queues/business/${businessId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setBusinessBookings(res.data);
+        } catch (err) {
+          toast.error("Failed to load business bookings.");
+        }
+      }
+    };
+    fetchBusinessBookings();
+  }, [business?._id, user?.id]);
+
   const [businessForm, setBusinessForm] = useState({
     name: business?.name || "",
     description: business?.description || "",
@@ -210,7 +300,7 @@ const BusinessDashboard: React.FC = () => {
     phone: business?.contact?.phone || "",
     email: business?.contact?.email || "",
     website: business?.contact?.website || "",
-    category: business?.category || "restaurant",
+    category: (business?.category as BusinessCategory) || "restaurant",
     slogan: "Your trusted service provider",
     founded: "2020",
     employees: "10-50",
@@ -311,26 +401,20 @@ const BusinessDashboard: React.FC = () => {
     cancellationFee: 0,
   });
 
-  const businessBookings = [
-    {
-      id: "1",
-      businessId: business.id,
-      customerName: "John Smith",
-      scheduledDate: "2024-06-12",
-      scheduledTime: "10:00",
-      status: "waiting",
-      tokenNumber: "T1001",
-      paymentStatus: "paid",
-      amount: 150,
-    },
-  ];
 
-  const todayBookings = businessBookings.filter(
-    (booking) => new Date(booking.scheduledDate).toDateString() === new Date().toDateString()
-  );
+  const todayBookings = businessBookings.filter((booking) => {
+    if (!booking.scheduledDate) return false;
+    // Handle both ISO and local date strings
+    const bookingDate = new Date(booking.scheduledDate);
+    const today = new Date();
+    // Compare only the date part (YYYY-MM-DD)
+    const bookingDateStr = bookingDate.toISOString().slice(0, 10);
+    const todayStr = today.toISOString().slice(0, 10);
+    return bookingDateStr === todayStr;
+  });
 
   const activeBookings = businessBookings.filter(
-    (booking) => booking.status === "waiting" || booking.status === "in-progress"
+    (booking) => ["waiting", "in-progress", "pending"].includes(booking.status)
   );
 
   const revenue = businessBookings
@@ -395,14 +479,32 @@ const BusinessDashboard: React.FC = () => {
     }
   };
 
-  const handleSaveHours = () => {
-    if (business) {
-      setBusiness({
-        ...business,
-        openingHours,
-      });
-      setEditingHours(false);
-      toast.success("Opening hours updated successfully!");
+  const handleSaveHours = async () => {
+    // Try to get business ID from business object, fallback to logged-in user
+  const businessId = business?._id;
+    if (businessId) {
+      try {
+        // Send PATCH/PUT request to backend
+        const token = localStorage.getItem("token");
+        await axios.patch(
+          `${import.meta.env.VITE_API_URL}/api/businesses/${businessId}/opening-hours`,
+          { openingHours },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        // Refetch business data from backend
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/businesses/${businessId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setBusiness(res.data);
+        setOpeningHours(res.data.openingHours);
+        setEditingHours(false);
+        refetchBusinesses();
+        toast.success("Opening hours updated successfully!");
+      } catch (err: any) {
+        toast.error("Failed to update opening hours. Please try again.");
+      }
+    } else {
+      toast.error("Business ID is missing. Cannot update opening hours.");
     }
   };
 
@@ -499,7 +601,7 @@ const BusinessDashboard: React.FC = () => {
             <div className="relative">
               <Avatar className="h-16 w-16">
                 <AvatarImage src={business.logo} />
-                <AvatarFallback>{business.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback>{(business.businessName || business.name) ? (business.businessName || business.name).charAt(0) : "?"}</AvatarFallback>
               </Avatar>
               <Button
                 size="sm"
@@ -511,7 +613,7 @@ const BusinessDashboard: React.FC = () => {
             </div>
             <div>
               <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                {business.name}
+                {business.businessName || business.name}
               </h1>
               <div className="flex items-center space-x-4">
                 <Badge variant={business.isVerified ? "default" : "secondary"}>
@@ -946,7 +1048,7 @@ const BusinessDashboard: React.FC = () => {
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
                     {editingProfile ? (
-                      <Select value={businessForm.category} onValueChange={(value) => setBusinessForm({ ...businessForm, category: value })}>
+                      <Select value={businessForm.category} onValueChange={(value) => setBusinessForm({ ...businessForm, category: value as BusinessCategory })}>
                         <SelectTrigger id="category">
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>

@@ -4,11 +4,12 @@ type User = {
   id: string;
   name: string;
   email: string;
-  role: "user" | "business" | "admin";
   phone?: string;
   location?: string;
   profileImage?: string;
+  role: "user" | "business" | "admin";
   createdAt?: string;
+  updatedAt?: string;
 };
 
 type AuthContextType = {
@@ -21,7 +22,7 @@ type AuthContextType = {
     role: string
   ) => Promise<{ user: User; token: string }>;
   logout: () => void;
-  updateProfile: (data: Partial<User> & { profileImageFile?: File }) => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,25 +34,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-
-    if (token && storedUser && storedUser !== "undefined") {
-      try {
-        const parsedUser: User = JSON.parse(storedUser);
-        if (parsedUser && parsedUser.email && parsedUser.role) {
-          setUser(parsedUser);
+    if (token) {
+      // Always fetch the latest profile from backend
+      fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(async (res) => {
+          if (!res.ok) throw new Error("Failed to fetch profile");
+          return res.json();
+        })
+        .then((profile: User) => {
+          setUser(profile);
           setIsAuthenticated(true);
-        } else {
-          throw new Error("Malformed user data");
-        }
-      } catch (err) {
-        console.error("⚠️ Error parsing stored user:", err);
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-      }
+          localStorage.setItem("user", JSON.stringify(profile));
+        })
+        .catch((err) => {
+          console.error("⚠️ Error fetching user profile:", err);
+          setUser(null);
+          setIsAuthenticated(false);
+          localStorage.removeItem("user");
+          localStorage.removeItem("token");
+        })
+        .finally(() => setIsLoading(false));
+    } else {
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   }, []);
 
   const login = async (
@@ -81,21 +90,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error("Invalid login response from server");
     }
 
-    const userData: User = {
-      id: data.user.id,
-      name: data.user.name,
-      email: data.user.email,
-      role: data.user.role,
-    };
-
     localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(userData));
-
-    setUser(userData);
+    // Immediately fetch the full profile after login
+    const profileRes = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+      headers: { Authorization: `Bearer ${data.token}` },
+    });
+    const profile: User = await profileRes.json();
+    localStorage.setItem("user", JSON.stringify(profile));
+    setUser(profile);
     setIsAuthenticated(true);
-
-    return { user: userData, token: data.token };
-  };
+    return { user: profile, token: data.token };
+  }
 
   const logout = () => {
     localStorage.removeItem("token");
@@ -105,41 +110,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Update user profile
-  const updateProfile = async (data: Partial<User> & { profileImageFile?: File }) => {
+  const updateProfile = async (data: Partial<User>) => {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("Not authenticated");
-
-    let res;
-    if (data.profileImageFile) {
-      // Send as multipart/form-data
-      const formData = new FormData();
-      if (data.name) formData.append("name", data.name);
-      if (data.phone) formData.append("phone", data.phone);
-      if (data.location) formData.append("location", data.location);
-      formData.append("profileImage", data.profileImageFile);
-      res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-    } else {
-      // Send as JSON
-      res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error("Profile update failed");
-      updatedUser = await res.json();
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to update profile");
     }
+    // Update local user state
+    const updatedUser = { ...user, ...data, ...result };
     setUser(updatedUser);
     localStorage.setItem("user", JSON.stringify(updatedUser));
   };
+
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout, updateProfile }}>

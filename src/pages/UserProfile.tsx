@@ -15,7 +15,6 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
-import { mockBookings, mockBusinesses } from "../data/mockData";
 import { QueueBooking } from "../types";
 
 const UserProfile: React.FC = () => {
@@ -26,41 +25,44 @@ const UserProfile: React.FC = () => {
     phone: user?.phone || "",
     location: user?.location || "",
   });
-  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
-  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+  const [bookings, setBookings] = React.useState<QueueBooking[]>([]);
+  const [loadingBookings, setLoadingBookings] = React.useState(true);
+  const [bookingsError, setBookingsError] = React.useState<string | null>(null);
 
-  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setProfileImageFile(file);
-      setProfileImagePreview(URL.createObjectURL(file));
-    }
-  }
-  // Get user's bookings
-  const userBookings = mockBookings.filter(
-    (booking) => booking.userId === user?.id,
-  );
-  const activeBookings = userBookings.filter(
+  React.useEffect(() => {
+    const fetchBookings = async () => {
+      setLoadingBookings(true);
+      setBookingsError(null);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/queue/my-bookings`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to fetch bookings");
+        const data = await res.json();
+        setBookings(data);
+      } catch (err: any) {
+        setBookingsError(err.message || "Unknown error");
+      } finally {
+        setLoadingBookings(false);
+      }
+    };
+    fetchBookings();
+  }, []);
+
+    const pastBookings = bookings.filter(
     (booking) =>
-      booking.status === "waiting" ||
-      booking.status === "confirmed" ||
-      booking.status === "in-progress",
-  );
-  const pastBookings = userBookings.filter(
-    (booking) =>
-      booking.status === "completed" || booking.status === "cancelled",
+      booking.status === "completed" || booking.status === "cancelled" || booking.status === "no-show" || booking.status === "rescheduled"
   );
 
   const handleSaveProfile = async () => {
     try {
-      await updateProfile(profileImageFile ? { ...editForm, profileImageFile } : editForm);
+      await updateProfile(editForm);
       setIsEditing(false);
-      setProfileImageFile(null);
-      setProfileImagePreview(null);
     } catch (error) {
       console.error("Failed to update profile:", error);
     }
-  }
+  };
 
   const getStatusColor = (status: QueueBooking["status"]) => {
     switch (status) {
@@ -83,10 +85,9 @@ const UserProfile: React.FC = () => {
     booking: QueueBooking;
     showActions?: boolean;
   }> = ({ booking, showActions = false }) => {
-    const business = mockBusinesses.find((b) => b.id === booking.businessId);
-    const department = business?.departments.find(
-      (d) => d.id === booking.departmentId,
-    );
+    // Use businessId and departmentId as fallback display
+    const businessName = booking.businessId || 'Unknown Business';
+    const departmentName = booking.departmentId || '';
 
     return (
       <motion.div
@@ -101,11 +102,13 @@ const UserProfile: React.FC = () => {
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-white">
-                {business?.name}
+                {businessName}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {department?.name}
-              </p>
+              {departmentName && (
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {departmentName}
+                </p>
+              )}
             </div>
           </div>
           <span
@@ -223,36 +226,14 @@ const UserProfile: React.FC = () => {
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/20 p-6">
               {/* Avatar */}
               <div className="text-center mb-6">
-                <div className="relative w-20 h-20 mx-auto mb-4">
-                  {profileImagePreview ? (
-                    <img
-                      src={profileImagePreview}
-                      alt="Profile Preview"
-                      className="w-20 h-20 rounded-full object-cover border-4 border-blue-400 shadow"
-                    />
-                  ) : user?.profileImage ? (
-                    <img
-                      src={user.profileImage.startsWith('http') ? user.profileImage : `${import.meta.env.VITE_API_URL}${user.profileImage}`}
-                      alt="Profile"
-                      className="w-20 h-20 rounded-full object-cover border-4 border-blue-400 shadow"
-                    />
-                  ) : (
-                    <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-bold text-2xl">
-                        {user?.name?.split(' ').map((n) => n[0]).join('').toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  <label htmlFor="profile-upload" className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-1 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6-6m2 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h6"></path></svg>
-                    <input
-                      id="profile-upload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleProfileImageChange}
-                    />
-                  </label>
+                <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-white font-bold text-2xl">
+                    {user?.name
+                      ?.split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()}
+                  </span>
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {user?.name}
@@ -391,23 +372,14 @@ const UserProfile: React.FC = () => {
                   <span className="text-gray-600 dark:text-gray-400">
                     Total Bookings
                   </span>
-                  <span className="font-semibold">{userBookings.length}</span>
+                  <span className="font-semibold">{bookings.length}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    Active Bookings
-                  </span>
-                  <span className="font-semibold">{activeBookings.length}</span>
-                </div>
-                <div className="flex justify-between">
+                                <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">
                     Completed
                   </span>
                   <span className="font-semibold">
-                    {
-                      userBookings.filter((b) => b.status === "completed")
-                        .length
-                    }
+                    {bookings.filter((b) => b.status === "completed").length}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -423,60 +395,12 @@ const UserProfile: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Bookings Section */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="lg:col-span-2 space-y-8"
-          >
-            {/* Active Bookings */}
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
-                <Clock className="w-6 h-6 mr-3 text-blue-600" />
-                Active Bookings ({activeBookings.length})
-              </h2>
-
-              {activeBookings.length > 0 ? (
-                <div className="space-y-4">
-                  {activeBookings.map((booking) => (
-                    <BookingCard
-                      key={booking.id}
-                      booking={booking}
-                      showActions={true}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/20 p-12 text-center">
-                  <div className="text-6xl mb-4">📋</div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    No Active Bookings
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    You don't have any active bookings right now. Ready to skip
-                    the wait?
-                  </p>
-                  <Link to="/user-home">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Find Services
-                    </motion.button>
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Booking History */}
+          <div className="lg:col-span-2 space-y-8">
             <div>
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
                 <Calendar className="w-6 h-6 mr-3 text-gray-600" />
                 Booking History ({pastBookings.length})
               </h2>
-
               {pastBookings.length > 0 ? (
                 <div className="space-y-4">
                   {pastBookings.slice(0, 5).map((booking) => (
@@ -502,7 +426,7 @@ const UserProfile: React.FC = () => {
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

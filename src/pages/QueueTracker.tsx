@@ -271,14 +271,8 @@ const QueueTracker: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {userBookings
                 .filter((bookingItem) => {
-                  // Only show bookings for today and active statuses
-                  const today = new Date();
-                  const bookedDate = new Date(bookingItem.bookedAt);
-                  const isToday = bookedDate.getDate() === today.getDate() &&
-                    bookedDate.getMonth() === today.getMonth() &&
-                    bookedDate.getFullYear() === today.getFullYear();
-                  const activeStatuses = ["pending", "waiting", "confirmed", "in-progress", "checked-in"];
-                  return isToday && activeStatuses.includes(bookingItem.status);
+                  const now = new Date();
+                  return new Date(bookingItem.bookedAt) >= now;
                 })
                 .map((bookingItem) => {
                 const bookingBusiness = bookingItem.business || 

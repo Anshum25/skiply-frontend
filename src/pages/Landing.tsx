@@ -26,6 +26,74 @@ import {
 import { mockBusinesses, BUSINESS_CATEGORIES } from "../data/mockData";
 import { useAuth } from "../contexts/AuthContext";
 
+// Custom hook to observe viewport width
+const useMediaQuery = (query: string) => {
+  const [matches, setMatches] = useState<boolean>(false);
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    const listener = () => setMatches(media.matches);
+    listener();
+    media.addEventListener ? media.addEventListener("change", listener) : media.addListener(listener);
+    return () => {
+      media.removeEventListener ? media.removeEventListener("change", listener) : media.removeListener(listener);
+    };
+  }, [query]);
+  return matches;
+};
+
+interface Feature {
+  icon: JSX.Element;
+  title: string;
+  description: string;
+  color: string;
+  delay: number;
+}
+
+const FeatureCard: React.FC<{ feature: Feature }> = ({ feature }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const inView = useInView(ref, { amount: 0.6 });
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const showDesc = isDesktop || inView;
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ delay: feature.delay, duration: 1.2 }}
+      viewport={{ once: true }}
+      whileHover={{ scale: 1.05, rotateY: 5, rotateX: 5 }}
+      className="relative group perspective-1000 h-full"
+    >
+      <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg p-8 rounded-3xl shadow-xl border border-white/20 overflow-hidden h-full flex flex-col justify-between">
+        <div className={`absolute inset-0 bg-gradient-to-r ${feature.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
+        <div className="flex justify-center mb-6">
+          <div className={`p-4 rounded-2xl bg-gradient-to-r ${feature.color} text-white shadow-lg group-hover:scale-110 transition-transform`}>
+            {feature.icon}
+          </div>
+        </div>
+        <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3 text-center">
+          {feature.title}
+        </h3>
+        <AnimatePresence>
+        {showDesc && (
+          <motion.p
+            key="desc"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-gray-600 dark:text-gray-300 text-center text-sm md:text-lg"
+          >
+            {feature.description}
+          </motion.p>
+        )}
+      </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+};
+
 const Landing: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
@@ -252,7 +320,8 @@ const Landing: React.FC = () => {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="text-center">
+          <div className="flex flex-col md:flex-row items-start gap-10">
+          <div className="w-full md:w-1/2 text-center">
             {/* Floating Badge */}
             <motion.div
               initial={{ opacity: 0, y: -50 }}
@@ -291,7 +360,7 @@ const Landing: React.FC = () => {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
-              className="max-w-4xl mx-auto mb-12"
+              className="max-w-4xl mx-auto mb-12 md:hidden"
             >
               <div className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg rounded-3xl p-6 shadow-2xl border border-white/20">
                 <div className="grid md:grid-cols-3 gap-4">
@@ -344,7 +413,7 @@ const Landing: React.FC = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.8 }}
-              className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16"
+              className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6 mb-16 md:hidden"
             >
               {!isAuthenticated ? (
                 <>
@@ -397,7 +466,7 @@ const Landing: React.FC = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 1 }}
-              className="grid grid-cols-2 md:grid-cols-4 gap-8"
+              className="grid grid-cols-2 md:grid-cols-4 gap-8 md:hidden"
             >
               {stats.map((stat, index) => (
                 <motion.div
@@ -420,6 +489,99 @@ const Landing: React.FC = () => {
               ))}
             </motion.div>
           </div>
+
+            {/* Demo Video Section */}
+            <div className="w-full md:w-1/2 flex justify-center items-center md:-mt-30 lg:-mt-50">
+              <div className="relative w-full max-w-lg h-80 md:h-[32rem]">
+                <video className="rounded-3xl shadow-2xl w-full h-full object-cover" controls poster="/placeholder.svg">
+                  <source src="/demo.mp4" type="video/mp4" />
+                </video>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Centered CTA & Stats */}
+          <div className="hidden md:flex flex-col items-center w-full mt-16 space-y-12">
+            {/* Search Bar */}
+            <div className="max-w-4xl w-full">
+              <div className="relative bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg rounded-3xl p-6 shadow-2xl border border-white/20">
+                <div className="grid grid-cols-3 gap-4">
+                  {/* Location Input */}
+                  <div className="relative group">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="text"
+                      value={detectingLocation ? 'Detecting location...' : location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white placeholder-gray-500"
+                      placeholder="Where are you?"
+                      disabled={detectingLocation}
+                    />
+                  </div>
+                  {/* Category */}
+                  <div className="relative">
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full px-4 py-4 rounded-2xl bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white appearance-none"
+                    >
+                      <option value="all">All Services</option>
+                      {BUSINESS_CATEGORIES.map((category) => (
+                        <option key={category.value} value={category.value}>
+                          {category.label}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                  </div>
+                  {/* Button */}
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-8 rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center space-x-2"
+                    onClick={() => navigate('/user-home')}
+                  >
+                    <Rocket className="w-5 h-5" />
+                    <span>Find &amp; Book</span>
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-6">
+              <Link to="/signup-user">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-10 py-5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl font-bold text-xl shadow-xl"
+                >
+                  Start Free Today
+                </motion.button>
+              </Link>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsVideoPlaying(true)}
+                className="flex items-center space-x-3 px-8 py-4 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-2xl font-semibold"
+              >
+                <Play className="w-5 h-5" />
+                <span>Watch Demo</span>
+              </motion.button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-4 gap-8">
+              {stats.map((stat, idx) => (
+                <div key={idx} className="text-center">
+                  <div className="flex items-center justify-center mb-2 text-blue-500">{stat.icon}</div>
+                  <div className="text-3xl font-black text-gray-900 dark:text-white mb-1">{stat.number}</div>
+                  <div className="text-gray-600 dark:text-gray-400 font-medium">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
 
         {/* Scroll Indicator */}
@@ -490,50 +652,11 @@ const Landing: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: feature.delay, duration: 0.6 }}
-                viewport={{ once: true }}
-                whileHover={{
-                  scale: 1.05,
-                  rotateY: 5,
-                  rotateX: 5,
-                }}
-                className="relative group perspective-1000"
-              >
-                <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg p-8 rounded-3xl shadow-xl border border-white/20 overflow-hidden">
-                  {/* Gradient Background */}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-r ${feature.color} opacity-5 group-hover:opacity-10 transition-opacity`}
-                  />
-
-                  {/* Icon */}
-                  <div className={`flex justify-center mb-6`}>
-                    <div
-                      className={`p-4 rounded-2xl bg-gradient-to-r ${feature.color} text-white shadow-lg group-hover:scale-110 transition-transform`}
-                    >
-                      {feature.icon}
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 text-center">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-300 text-center text-lg">
-                    {feature.description}
-                  </p>
-
-                  {/* Hover Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl" />
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
+  {features.map((feature) => (
+    <FeatureCard key={feature.title} feature={feature} />
+  ))}
+</div>
         </div>
       </section>
 

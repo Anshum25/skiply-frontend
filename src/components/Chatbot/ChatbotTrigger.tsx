@@ -72,24 +72,12 @@ const ChatbotTrigger: React.FC<ChatbotTriggerProps> = ({
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
                   <HelpCircle className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
-                    Need Help?
-                  </h4>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
-                    Ask me anything about Skiply! I can help you with bookings,
-                    account questions, and more.
-                  </p>
-                  <button
-                    onClick={handleToggleChat}
-                    className="mt-2 text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline"
-                  >
-                    Start chatting →
-                  </button>
+                  <p className="font-medium text-gray-900 dark:text-white text-sm">Need help?</p>
                 </div>
               </div>
 

@@ -26,6 +26,16 @@ const UserProfile: React.FC = () => {
     phone: user?.phone || "",
     location: user?.location || "",
   });
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
+
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProfileImageFile(file);
+      setProfileImagePreview(URL.createObjectURL(file));
+    }
+  }
   // Get user's bookings
   const userBookings = mockBookings.filter(
     (booking) => booking.userId === user?.id,
@@ -33,7 +43,7 @@ const UserProfile: React.FC = () => {
   const activeBookings = userBookings.filter(
     (booking) =>
       booking.status === "waiting" ||
-      booking.status === "approved" ||
+      booking.status === "confirmed" ||
       booking.status === "in-progress",
   );
   const pastBookings = userBookings.filter(
@@ -43,12 +53,14 @@ const UserProfile: React.FC = () => {
 
   const handleSaveProfile = async () => {
     try {
-      await updateProfile(editForm);
+      await updateProfile(profileImageFile ? { ...editForm, profileImageFile } : editForm);
       setIsEditing(false);
+      setProfileImageFile(null);
+      setProfileImagePreview(null);
     } catch (error) {
       console.error("Failed to update profile:", error);
     }
-  };
+  }
 
   const getStatusColor = (status: QueueBooking["status"]) => {
     switch (status) {
@@ -211,14 +223,36 @@ const UserProfile: React.FC = () => {
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/20 p-6">
               {/* Avatar */}
               <div className="text-center mb-6">
-                <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-white font-bold text-2xl">
-                    {user?.name
-                      ?.split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()}
-                  </span>
+                <div className="relative w-20 h-20 mx-auto mb-4">
+                  {profileImagePreview ? (
+                    <img
+                      src={profileImagePreview}
+                      alt="Profile Preview"
+                      className="w-20 h-20 rounded-full object-cover border-4 border-blue-400 shadow"
+                    />
+                  ) : user?.profileImage ? (
+                    <img
+                      src={user.profileImage.startsWith('http') ? user.profileImage : `${import.meta.env.VITE_API_URL}${user.profileImage}`}
+                      alt="Profile"
+                      className="w-20 h-20 rounded-full object-cover border-4 border-blue-400 shadow"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-2xl">
+                        {user?.name?.split(' ').map((n) => n[0]).join('').toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <label htmlFor="profile-upload" className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-1 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6-6m2 2v6a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h6"></path></svg>
+                    <input
+                      id="profile-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleProfileImageChange}
+                    />
+                  </label>
                 </div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {user?.name}

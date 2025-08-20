@@ -5,6 +5,10 @@ type User = {
   name: string;
   email: string;
   role: "user" | "business" | "admin";
+  phone?: string;
+  location?: string;
+  profileImage?: string;
+  createdAt?: string;
 };
 
 type AuthContextType = {
@@ -17,7 +21,7 @@ type AuthContextType = {
     role: string
   ) => Promise<{ user: User; token: string }>;
   logout: () => void;
-  updateProfile: (data: Partial<User>) => Promise<void>;
+  updateProfile: (data: Partial<User> & { profileImageFile?: File }) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -101,27 +105,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Update user profile
-  const updateProfile = async (data: Partial<User>) => {
+  const updateProfile = async (data: Partial<User> & { profileImageFile?: File }) => {
     const token = localStorage.getItem("token");
     if (!token) throw new Error("Not authenticated");
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
-    const result = await res.json();
-    if (!res.ok) {
-      throw new Error(result.message || "Failed to update profile");
+
+    let res;
+    if (data.profileImageFile) {
+      // Send as multipart/form-data
+      const formData = new FormData();
+      if (data.name) formData.append("name", data.name);
+      if (data.phone) formData.append("phone", data.phone);
+      if (data.location) formData.append("location", data.location);
+      formData.append("profileImage", data.profileImageFile);
+      res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+    } else {
+      // Send as JSON
+      res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Profile update failed");
+      updatedUser = await res.json();
     }
-    // Update local user state
-    const updatedUser = { ...user, ...data, ...result };
     setUser(updatedUser);
     localStorage.setItem("user", JSON.stringify(updatedUser));
   };
-
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout, updateProfile }}>

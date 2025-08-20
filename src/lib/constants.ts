@@ -24,9 +24,13 @@ export const QUEUE_STATUS_COLORS = {
 
 export const DEFAULT_LOCATION = "New York, NY";
 
-export const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
+// Guard against missing env so app doesn't crash after a fresh clone
+const ENV_API_URL = (import.meta.env.VITE_API_URL as string | undefined) || undefined;
+const ORIGIN = typeof window !== "undefined" ? window.location.origin : "";
 
-export const SOCKET_URL = import.meta.env.VITE_API_URL.replace(/\/api$/, "");
+export const API_BASE_URL = `${ENV_API_URL || ORIGIN}/api`;
+
+export const SOCKET_URL = (ENV_API_URL ? ENV_API_URL.replace(/\/api$/, "") : ORIGIN);
 
 export const ITEMS_PER_PAGE = 12;
 

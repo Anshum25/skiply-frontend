@@ -263,7 +263,7 @@ const SkiplyBot: React.FC<SkiplyBotProps> = ({
       initial={{ opacity: 0, scale: 0.8, y: 50 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.8, y: 50 }}
-      className="fixed bottom-4 right-4 w-96 h-[600px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 flex flex-col overflow-hidden"
+      className="fixed bottom-2 right-2 md:bottom-4 md:right-4 w-[90vw] md:w-96 h-[75vh] md:h-[600px] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 flex flex-col overflow-hidden"
     >
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">

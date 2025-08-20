@@ -134,7 +134,10 @@ export const Navigation: React.FC = () => {
 
           {/* Right Side Items */}
           <div className="flex items-center space-x-3">
-            <ThemeToggle />
+            {/* Hide theme toggle on mobile; it will appear inside burger menu */}
+            <div className="hidden md:block">
+              <ThemeToggle />
+            </div>
 
             {isAuthenticated && (
               <>
@@ -255,7 +258,8 @@ export const Navigation: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex items-center space-x-2">
+              // Hide auth buttons on mobile; they will appear inside burger menu
+              <div className="hidden md:flex items-center space-x-2">
                 <Button
                   variant="ghost"
                   asChild
@@ -322,6 +326,36 @@ export const Navigation: React.FC = () => {
                   </motion.div>
                 );
               })}
+
+              {/* Extra actions for mobile */}
+              <div className="border-t border-border/50 my-2" />
+
+              {/* Dark mode toggle row */}
+              <div className="flex items-center justify-between px-2 py-1">
+                <span className="text-sm text-foreground/80">Dark Mode</span>
+                <ThemeToggle />
+              </div>
+
+              {/* Auth actions when logged out (mobile only) */}
+              {!isAuthenticated && (
+                <div className="flex flex-col gap-2 px-1 mt-1">
+                  <Button
+                    variant="ghost"
+                    className="justify-start gap-3 w-full h-12"
+                    asChild
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Link to="/login">Login</Link>
+                  </Button>
+                  <Button
+                    className="btn-gradient justify-center gap-3 w-full h-12"
+                    asChild
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Link to="/signup-user">Sign Up</Link>
+                  </Button>
+                </div>
+              )}
 
               {isAuthenticated && (
                 <>

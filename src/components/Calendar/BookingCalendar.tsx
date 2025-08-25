@@ -39,6 +39,7 @@ import {
 import { toast } from "sonner";
 import "./BookingCalendar.css";
 import { AdvanceBookingModal } from "./AdvanceBookingModal";
+import LiveQueueBookingSection from "../LiveQueueBookingSection";
 
 interface TimeSlot {
   id: string;
@@ -111,6 +112,8 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
   const [isAdvanceBookingModalOpen, setIsAdvanceBookingModalOpen] = useState(false);
   const [selectedSlotDate, setSelectedSlotDate] = useState<Date | null>(null);
   const [selectedSlotTime, setSelectedSlotTime] = useState<string | null>(null);
+  const [editingBooking, setEditingBooking] = useState<BookingSlot | null>(null);
+  const [isLiveQueueBookingVisible, setIsLiveQueueBookingVisible] = useState(false);
   const [recentBookings, setRecentBookings] = useState<Array<{
     id: string;
     tokenNumber: number;
@@ -205,9 +208,14 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
     customerName: string;
   }) => {
     console.log('handleSuccessfulBooking called with:', bookingData);
+
+    const newRecentBooking = {
+      id: bookingData.bookingId,
+      ...bookingData,
+    };
     
     // Update recent bookings
-    const updatedBookings = [bookingData, ...recentBookings.slice(0, 2)]; // Keep only last 3 bookings
+    const updatedBookings = [newRecentBooking, ...recentBookings.slice(0, 2)]; // Keep only last 3 bookings
     setRecentBookings(updatedBookings);
     
     // Save to localStorage
@@ -312,29 +320,6 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
     return classes;
   };
 
-  const handleBookingSubmit = () => {
-    if (!selectedTimeSlot) return;
-
-    if (!slotStartTime || !slotEndTime) {
-      toast.error("Time slot details not available.");
-      return;
-    }
-
-    if (!selectedService) {
-      toast.error("Please select a service.");
-      return;
-    }
-
-    queueAPI.bookSlot(business._id, slotStartTime, slotEndTime, selectedService)
-      .then(booking => {
-        setIsBookingModalOpen(false);
-        if (onBookingCreate) onBookingCreate(booking);
-        toast.success("Booking created successfully!");
-      })
-      .catch(err => {
-        toast.error(`Failed to create booking: ${err.message}`);
-      });
-  };
 
   const navigateMonth = (direction: "prev" | "next") => {
     const newDate = new Date(currentDate);
@@ -480,7 +465,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
                   key={index}
                   whileHover={!isDisabled ? { scale: 1.05 } : {}}
                   whileTap={!isDisabled ? { scale: 0.95 } : {}}
-                  className={`h-20 border border-gray-200 dark:border-gray-700 rounded-lg ${
+                  className={`h-16 border border-gray-200 dark:border-gray-700 rounded-lg ${
                     isDisabled
                       ? "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 cursor-not-allowed pointer-events-none greyed-out"
                       : "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -578,113 +563,6 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
         return null;
       })()}
 
-      {/* Booking Details Modal */}
-      <Dialog open={isBookingModalOpen} onOpenChange={setIsBookingModalOpen}>
-        {business && (
-          <QueueBookingModal
-            business={business}
-            isOpen={isBookingModalOpen}
-            onClose={() => setIsBookingModalOpen(false)}
-            onSuccess={(booking) => {
-              setIsBookingModalOpen(false);
-              if (onBookingCreate) onBookingCreate(booking);
-            }}
-            onServiceSelect={(service) => setSelectedService(service)}
-            startTime={slotStartTime}
-            endTime={slotEndTime}
-          />
-        )}
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {isManagementMode ? "Manage Bookings" : "Book Appointment"}
-            </DialogTitle>
-          </DialogHeader>
-
-          {selectedTimeSlot && (
-            <div className="space-y-6">
-              {/* Time Slot Info */}
-              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">
-                    {selectedDate.toLocaleDateString()} at{" "}
-                    {selectedTimeSlot.time}
-                  </span>
-                  <Badge
-                    variant={
-                      selectedTimeSlot.available ? "default" : "destructive"
-                    }
-                  >
-                    {selectedTimeSlot.booked}/{selectedTimeSlot.capacity}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Existing Bookings (Management Mode) */}
-              {isManagementMode && selectedTimeSlot.bookings.length > 0 && (
-                <div className="space-y-3">
-                  <h4 className="font-medium">Existing Bookings</h4>
-                  {selectedTimeSlot.bookings.map((booking) => (
-                    <div
-                      key={booking.id}
-                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-3"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium">{booking.customerName}</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {booking.service}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {booking.customerPhone}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Badge
-                            variant={
-                              booking.status === "confirmed"
-                                ? "default"
-                                : booking.status === "completed"
-                                  ? "outline"
-                                  : booking.status === "cancelled"
-                                    ? "destructive"
-                                    : "secondary"
-                            }
-                          >
-                            {booking.status}
-                          </Badge>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setEditingBooking(booking)}
-                          >
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleBookingDelete(booking.id)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {!selectedTimeSlot.available && !isManagementMode && (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>This time slot is fully booked</p>
-                  <p className="text-sm">Please select a different time</p>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Render AdvanceBookingModal for advance booking */}
       <AdvanceBookingModal
@@ -722,6 +600,33 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Live Queue Booking Button */}
+      <Card className="mt-6">
+        <CardContent className="p-6">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold mb-2">Join Live Queue</h3>
+            <p className="text-muted-foreground mb-4">
+              Skip the appointment booking and join the live queue for immediate service
+            </p>
+            <Button 
+              onClick={() => setIsLiveQueueBookingVisible(true)}
+              className="btn-gradient"
+              size="lg"
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Book Now - Live Queue
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Live Queue Booking Section */}
+      <LiveQueueBookingSection
+        business={business}
+        isVisible={isLiveQueueBookingVisible}
+        onClose={() => setIsLiveQueueBookingVisible(false)}
+      />
     </div>
   );
 };

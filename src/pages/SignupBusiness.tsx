@@ -165,9 +165,9 @@ const SignupBusiness: React.FC = () => {
 
   const watchedFields = watch(stepFields[currentStep] ?? []);
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove } = useFieldArray<SignupFormData, "departments">({
     control,
-    name: "departments",
+    name: "departments" as const,
   });
 
   const password = watch("password");
@@ -392,7 +392,7 @@ const SignupBusiness: React.FC = () => {
 
   const passwordStrength = getPasswordStrength(password);
 
-  const days = [
+  const days: (keyof SignupFormData['openingHours'])[] = [
     "monday",
     "tuesday",
     "wednesday",
@@ -811,36 +811,36 @@ const SignupBusiness: React.FC = () => {
                       Operating Hours
                     </h3>
 
-                    <div className="grid gap-3">
+                    <div className="space-y-4">
                       {days.map((day) => (
-                        <div key={day} className="flex items-center space-x-4">
-                          <div className="w-20 text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
-                            {day}
-                          </div>
-
-                          <div className="flex items-center space-x-2">
+                        <div
+                          key={day}
+                          className="flex items-center gap-x-2 sm:gap-x-4"
+                        >
+                          <span className="capitalize font-medium text-gray-700 dark:text-gray-300 w-10 shrink-0">
+                            {day.substring(0, 3)}
+                          </span>
+                          <div className="flex items-center gap-2 flex-grow">
                             <input
-                              {...register(`openingHours.${day}.closed` as const)}
+                              {...register(`openingHours.${day}.start`)}
+                              type="time"
+                              className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                            />
+                            <span className="text-sm text-gray-500">to</span>
+                            <input
+                              {...register(`openingHours.${day}.end`)}
+                              type="time"
+                              className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                            />
+                          </div>
+                          <div className="flex items-center gap-x-2 shrink-0">
+                            <input
                               type="checkbox"
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              id={`${day}-closed`}
+                              {...register(`openingHours.${day}.closed`)}
+                              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                             />
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              Closed
-                            </span>
-                          </div>
-
-                          <div className="flex items-center space-x-2 flex-1">
-                            <input
-                              {...register(`openingHours.${day}.start` as const)}
-                              type="time"
-                              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
-                            />
-                            <span className="text-gray-500">to</span>
-                            <input
-                              {...register(`openingHours.${day}.end` as const)}
-                              type="time"
-                              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
-                            />
+                            <label htmlFor={`${day}-closed`} className="text-sm">Closed</label>
                           </div>
                         </div>
                       ))}

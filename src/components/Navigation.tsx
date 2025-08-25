@@ -92,45 +92,26 @@ export const Navigation: React.FC = () => {
             whileTap={{ scale: 0.95 }}
           >
             <Link to="/" className="flex items-center space-x-3">
-           <div className="flex items-center space-x-2">
-  <span className="text-[24px] font-extrabold tracking-[0.15em] bg-gradient-to-r from-purple-400 via-pink-500 to-indigo-500 text-transparent bg-clip-text font-[cinzel]">
-    S K I P L Y
-  </span>
-</div>
-
-
+              <div
+                className={cn(
+                  "items-center space-x-2",
+                  isAuthenticated ? "hidden md:flex" : "flex",
+                )}
+              >
+                <span className="text-[24px] font-extrabold tracking-widest bg-gradient-to-r from-purple-400 via-pink-500 to-indigo-500 text-transparent bg-clip-text font-[cinzel]">
+                  SKIPLY
+                </span>
+              </div>
+              {isAuthenticated && (
+                <div className="flex items-center space-x-2 md:hidden">
+                  <span className="text-[24px] font-extrabold tracking-[0.15em] bg-gradient-to-r from-purple-400 via-pink-500 to-indigo-500 text-transparent bg-clip-text font-[cinzel]">
+                    S
+                  </span>
+                </div>
+              )}
             </Link>
           </motion.div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navigationItems.map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <motion.div
-                  key={item.href}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Button
-                    variant={isActive(item.href) ? "default" : "ghost"}
-                    className={cn(
-                      "flex items-center gap-2 transition-all duration-200 hover:scale-105",
-                      isActive(item.href) &&
-                        "bg-gradient-primary text-white shadow-lg",
-                    )}
-                    asChild
-                  >
-                    <Link to={item.href}>
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  </Button>
-                </motion.div>
-              );
-            })}
-          </div>
 
           {/* Right Side Items */}
           <div className="flex items-center space-x-3">
@@ -139,39 +120,42 @@ export const Navigation: React.FC = () => {
               <ThemeToggle />
             </div>
 
-            {isAuthenticated && (
-              <>
-                {/* Notifications */}
-                <NotificationDrawer>
-                  <Button variant="ghost" size="sm" className="relative">
-                    <Bell className="h-5 w-5" />
-                    {unreadCount > 0 && (
-                      <Badge className="notification-badge">
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </NotificationDrawer>
+            <div className="hidden md:flex items-center space-x-3">
+              {isAuthenticated && (
+                <>
+                  {/* Notifications */}
+                  <NotificationDrawer>
+                    <Button variant="ghost" size="sm" className="relative">
+                      <Bell className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                        <Badge className="notification-badge">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  </NotificationDrawer>
 
-                {/* Messages (for business/admin) */}
-                {(user?.role === "business" || user?.role === "admin") && (
-                  <Button variant="ghost" size="sm" className="relative">
-                    <MessageSquare className="h-5 w-5" />
-                    <Badge className="notification-badge">2</Badge>
-                  </Button>
-                )}
+                  {/* Messages (for business/admin) */}
+                  {(user?.role === "business" || user?.role === "admin") && (
+                    <Button variant="ghost" size="sm" className="relative">
+                      <MessageSquare className="h-5 w-5" />
+                      <Badge className="notification-badge">2</Badge>
+                    </Button>
+                  )}
 
-                {/* Bookmarks (for users) */}
-                {user?.role === "user" && (
-                  <Button variant="ghost" size="sm">
-                    <Heart className="h-5 w-5" />
-                  </Button>
-                )}
-              </>
-            )}
+                  {/* Bookmarks (for users) */}
+                  {user?.role === "user" && (
+                    <Button variant="ghost" size="sm">
+                      <Heart className="h-5 w-5" />
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
 
             {isAuthenticated ? (
-              <DropdownMenu>
+              <div className="hidden md:block">
+                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
@@ -257,6 +241,7 @@ export const Navigation: React.FC = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </div>
             ) : (
               // Hide auth buttons on mobile; they will appear inside burger menu
               <div className="hidden md:flex items-center space-x-2">
@@ -275,6 +260,13 @@ export const Navigation: React.FC = () => {
                 </Button>
               </div>
             )}
+
+            {/* Home Icon for Mobile */}
+            <Link to="/" className="md:hidden">
+              <Button variant="ghost">
+                <Home className="h-6 w-6" />
+              </Button>
+            </Link>
 
             {/* Mobile Menu Button */}
             <Button
@@ -328,33 +320,29 @@ export const Navigation: React.FC = () => {
               })}
 
               {/* Extra actions for mobile */}
-              <div className="border-t border-border/50 my-2" />
-
-              {/* Dark mode toggle row */}
-              <div className="flex items-center justify-between px-2 py-1">
-                <span className="text-sm text-foreground/80">Dark Mode</span>
-                <ThemeToggle />
-              </div>
 
               {/* Auth actions when logged out (mobile only) */}
               {!isAuthenticated && (
-                <div className="flex flex-col gap-2 px-1 mt-1">
-                  <Button
-                    variant="ghost"
-                    className="justify-start gap-3 w-full h-12"
-                    asChild
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Link to="/login">Login</Link>
-                  </Button>
-                  <Button
-                    className="btn-gradient justify-center gap-3 w-full h-12"
-                    asChild
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <Link to="/signup-user">Sign Up</Link>
-                  </Button>
-                </div>
+                <>
+                  <div className="border-t border-border/50 my-2" />
+                  <div className="flex flex-col gap-2 px-1 mt-1">
+                    <Button
+                      variant="ghost"
+                      className="justify-start gap-3 w-full h-12"
+                      asChild
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Link to="/login">Login</Link>
+                    </Button>
+                    <Button
+                      className="btn-gradient justify-center gap-3 w-full h-12"
+                      asChild
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Link to="/signup-user">Sign Up</Link>
+                    </Button>
+                  </div>
+                </>
               )}
 
               {isAuthenticated && (
@@ -380,8 +368,68 @@ export const Navigation: React.FC = () => {
                       </Button>
                     </NotificationDrawer>
                   </motion.div>
+                  {user?.role === "user" && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: (navigationItems.length + 1) * 0.1 }}
+                    >
+                      <Button
+                        variant="ghost"
+                        className="justify-start gap-3 w-full h-12"
+                        asChild
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <Link to="/favorites">
+                          <Heart className="h-5 w-5" />
+                          Favorites
+                        </Link>
+                      </Button>
+                    </motion.div>
+                  )}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: (navigationItems.length + 1) * 0.1 }}
+                  >
+                    <Button
+                      variant="ghost"
+                      className="justify-start gap-3 w-full h-12"
+                      asChild
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Link to="/user-profile">
+                        <Settings className="h-5 w-5" />
+                        Settings
+                      </Link>
+                    </Button>
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: (navigationItems.length + 2) * 0.1 }}
+                  >
+                    <Button
+                      variant="ghost"
+                      className="justify-start gap-3 w-full h-12 text-destructive hover:text-destructive"
+                      onClick={() => {
+                        handleLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      <LogOut className="h-5 w-5" />
+                      Log out
+                    </Button>
+                  </motion.div>
                 </>
               )}
+
+              {/* Dark mode toggle row */}
+              <div className="border-t border-border/50 my-2" />
+              <div className="flex items-center justify-between px-2 py-1">
+                <span className="text-sm text-foreground/80">Dark Mode</span>
+                <ThemeToggle />
+              </div>
             </div>
           </motion.div>
         )}

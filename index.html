@@ -8,6 +8,16 @@
 <link rel="icon" type="image/jpeg" href="/favicon.jpeg" />
 
     <title>Skiply | A Smart Queue System</title>
+    <script>
+      (function() {
+        var theme = localStorage.getItem('skiply_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script>
   </head>
 
   <body>

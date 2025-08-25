@@ -6,7 +6,7 @@ interface StarRatingProps {
   rating: number;
   onRatingChange?: (rating: number) => void;
   readonly?: boolean;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   showValue?: boolean;
   className?: string;
 }
@@ -22,6 +22,7 @@ export const StarRating: React.FC<StarRatingProps> = ({
   const [hoverRating, setHoverRating] = useState(0);
 
   const sizeClasses = {
+    xs: "w-3 h-3",
     sm: "w-4 h-4",
     md: "w-5 h-5",
     lg: "w-6 h-6",

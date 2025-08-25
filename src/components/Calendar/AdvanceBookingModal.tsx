@@ -305,7 +305,7 @@ const AdvanceBookingModal: React.FC<AdvanceBookingModalProps> = ({ isOpen, onClo
           <div className="space-y-4">
             <div className="flex items-center space-x-2 text-sm">
               <Button variant="ghost" size="sm" onClick={() => setStep("details")} className="p-0 h-auto">
-                <ArrowLeft className="w-4 h-4 mr-1" /> Back
+                <ArrowLeft className="w-4 h-4" />
               </Button>
               <span className="text-muted-foreground">•</span>
               <span className="font-medium">{selectedDepartment?.name || "General Service"}</span>
@@ -371,7 +371,7 @@ const AdvanceBookingModal: React.FC<AdvanceBookingModalProps> = ({ isOpen, onClo
           <div className="space-y-4">
             <div className="flex items-center space-x-2 text-sm">
               <Button variant="ghost" size="sm" onClick={() => setStep('details')} className="p-0 h-auto">
-                <ArrowLeft className="w-4 h-4 mr-1" /> Back
+                <ArrowLeft className="w-4 h-4" />
               </Button>
               <span className="text-muted-foreground">•</span>
               <span className="font-medium">Confirm Booking</span>

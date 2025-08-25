@@ -268,14 +268,11 @@ const SkiplyBot: React.FC<SkiplyBotProps> = ({
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-              <Bot className="w-6 h-6" />
+          <div className="flex items-center space-x-2 md:space-x-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <Bot className="w-5 h-5 md:w-6 md:h-6" />
             </div>
-            <div>
-              <h3 className="font-semibold text-lg">Skiply Assistant</h3>
-              <p className="text-blue-100 text-sm">AI-powered FAQ Bot</p>
-            </div>
+            <h3 className="font-semibold text-base md:text-lg">Skiply Assistant</h3>
           </div>
           <div className="flex items-center space-x-2">
             <Button

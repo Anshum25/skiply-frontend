@@ -228,11 +228,11 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[92vw] max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg max-h-[80vh] overflow-y-auto p-4">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div>
-              <DialogTitle className="text-2xl font-bold">{business.name}</DialogTitle>
+              <DialogTitle className="text-lg font-bold">{business.name}</DialogTitle>
               <p className="text-muted-foreground">Live Queue Booking</p>
             </div>
             <Button variant="ghost" size="sm" onClick={handleClose}>
@@ -242,7 +242,7 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
         </DialogHeader>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-between mb-6 px-4">
+<div className="flex items-center justify-between mb-4 px-2">
           {["departments", "details", "confirm", "success"].map((step, index) => (
             <div key={step} className="flex items-center">
               <div
@@ -282,34 +282,34 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
               initial="initial"
               animate="animate"
               exit="exit"
-              className="space-y-6"
+              className="space-y-4"
             >
               {/* Overall Statistics */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-3 gap-2 mb-4">
                 <Card className="glass-strong border-0">
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-primary">{totalQueueSize}</div>
-                    <div className="text-sm text-muted-foreground">Total in Queue</div>
+                  <CardContent className="p-2 text-center">
+                    <div className="text-lg font-bold text-primary">{totalQueueSize}</div>
+                    <div className="text-xs text-muted-foreground">Total in Queue</div>
                   </CardContent>
                 </Card>
                 <Card className="glass-strong border-0">
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-orange-600">{averageWaitTime}min</div>
-                    <div className="text-sm text-muted-foreground">Avg Wait Time</div>
+                  <CardContent className="p-2 text-center">
+                    <div className="text-lg font-bold text-orange-600">{averageWaitTime}min</div>
+                    <div className="text-xs text-muted-foreground">Avg Wait Time</div>
                   </CardContent>
                 </Card>
                 <Card className="glass-strong border-0">
-                  <CardContent className="p-4 text-center">
+                  <CardContent className="p-2 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Star className="w-4 h-4 text-yellow-500" />
-                      <div className="text-2xl font-bold">{business.rating}</div>
+                      <div className="text-lg font-bold">{business.rating}</div>
                     </div>
-                    <div className="text-sm text-muted-foreground">Rating</div>
+                    <div className="text-xs text-muted-foreground">Rating</div>
                   </CardContent>
                 </Card>
               </div>
 
-              <h3 className="text-xl font-semibold mb-4">Select a Department</h3>
+              <h3 className="text-lg font-semibold mb-3">Select a Department</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {business.departments.map((dept) => {
@@ -331,7 +331,7 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
                         )}
                         onClick={() => dept.currentQueueSize < dept.maxQueueSize && handleDepartmentSelect(dept)}
                       >
-                        <CardContent className="p-6">
+                        <CardContent className="p-4">
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex-1">
                               <h4 className="text-lg font-semibold mb-2">{dept.name}</h4>
@@ -433,31 +433,31 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
               initial="initial"
               animate="animate"
               exit="exit"
-              className="space-y-6"
+              className="space-y-3"
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-semibold">Your Details</h3>
-                <Button variant="ghost" onClick={() => setCurrentStep("departments")}>
-                  <ArrowLeft className="w-4 h-4 mr-2" />
+                <h3 className="text-base font-semibold">Your Details</h3>
+                <Button variant="ghost" size="sm" onClick={() => setCurrentStep("departments")}>
+                  <ArrowLeft className="w-3 h-3 mr-2" />
                   Back
                 </Button>
               </div>
 
               {/* Selected Department Summary */}
               <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200">
-                <CardContent className="p-4">
+                <CardContent className="p-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-semibold text-blue-900 dark:text-blue-100">
+                      <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
                         {selectedDepartment.name}
                       </h4>
-                      <div className="flex items-center gap-4 text-sm text-blue-700 dark:text-blue-300 mt-1">
+                      <div className="flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300 mt-1">
                         <span>Wait time: ~{selectedDepartment.estimatedWaitTime} min</span>
                         <span>Queue: {selectedDepartment.currentQueueSize}/{selectedDepartment.maxQueueSize}</span>
                         {selectedDepartment.price && <span>Price: ${selectedDepartment.price}</span>}
                       </div>
                     </div>
-                    <Badge className="bg-blue-100 text-blue-700">
+                    <Badge className="bg-blue-100 text-blue-700 text-xs px-2 py-1">
                       Token #{selectedDepartment.currentQueueSize + 1}
                     </Badge>
                   </div>
@@ -465,77 +465,73 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
               </Card>
 
               {/* Form */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="customerName">Full Name *</Label>
-                    <Input
-                      id="customerName"
-                      value={bookingData.customerName}
-                      onChange={(e) => setBookingData(prev => ({ ...prev, customerName: e.target.value }))}
-                      placeholder="Enter your full name"
-                      className="mt-1"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="customerPhone">Phone Number *</Label>
-                    <Input
-                      id="customerPhone"
-                      type="tel"
-                      value={bookingData.customerPhone}
-                      onChange={(e) => {
-                        // Only allow digits
-                        const value = e.target.value.replace(/\D/g, '');
-                        // Limit to 10 digits
-                        if (value.length <= 10) {
-                          setBookingData(prev => ({ ...prev, customerPhone: value }));
-                        }
-                      }}
-                      placeholder="Enter 10-digit phone number"
-                      maxLength={10}
-                      className="mt-1"
-                    />
-                    {bookingData.customerPhone && bookingData.customerPhone.length !== 10 && (
-                      <p className="text-sm text-red-500 mt-1">Phone number must be exactly 10 digits</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="customerEmail">Email Address</Label>
-                    <Input
-                      id="customerEmail"
-                      type="email"
-                      value={bookingData.customerEmail}
-                      onChange={(e) => setBookingData(prev => ({ ...prev, customerEmail: e.target.value }))}
-                      placeholder="Enter your email"
-                      className="mt-1"
-                    />
-                  </div>
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <Label htmlFor="customerName" className="text-sm">Full Name *</Label>
+                  <Input
+                    id="customerName"
+                    value={bookingData.customerName}
+                    onChange={(e) => setBookingData(prev => ({ ...prev, customerName: e.target.value }))}
+                    placeholder="Enter your full name"
+                    className="mt-1 h-9 text-sm"
+                  />
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="notes">Additional Notes</Label>
-                    <Textarea
-                      id="notes"
-                      value={bookingData.notes}
-                      onChange={(e) => setBookingData(prev => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Any special requirements or notes..."
-                      rows={6}
-                      className="mt-1"
-                    />
-                  </div>
+                <div>
+                  <Label htmlFor="customerPhone" className="text-sm">Phone Number *</Label>
+                  <Input
+                    id="customerPhone"
+                    type="tel"
+                    value={bookingData.customerPhone}
+                    onChange={(e) => {
+                      // Only allow digits
+                      const value = e.target.value.replace(/\D/g, '');
+                      // Limit to 10 digits
+                      if (value.length <= 10) {
+                        setBookingData(prev => ({ ...prev, customerPhone: value }));
+                      }
+                    }}
+                    placeholder="Enter 10-digit phone number"
+                    maxLength={10}
+                    className="mt-1 h-9 text-sm"
+                  />
+                  {bookingData.customerPhone && bookingData.customerPhone.length !== 10 && (
+                    <p className="text-sm text-red-500 mt-1">Phone number must be exactly 10 digits</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="customerEmail" className="text-sm">Email Address</Label>
+                  <Input
+                    id="customerEmail"
+                    type="email"
+                    value={bookingData.customerEmail}
+                    onChange={(e) => setBookingData(prev => ({ ...prev, customerEmail: e.target.value }))}
+                    placeholder="Enter your email"
+                    className="mt-1 h-9 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="notes" className="text-sm">Additional Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={bookingData.notes}
+                    onChange={(e) => setBookingData(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Any special requirements or notes..."
+                    rows={3}
+                    className="mt-1 text-sm"
+                  />
                 </div>
               </div>
 
               <Button 
                 onClick={handleDetailsSubmit}
-                className="w-full btn-gradient"
+                className="w-full btn-gradient h-9 text-sm"
                 disabled={!bookingData.customerName || !bookingData.customerPhone}
               >
                 Continue to Confirmation
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRight className="w-3 h-3 ml-2" />
               </Button>
             </motion.div>
           )}
@@ -563,7 +559,7 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
                   <CardTitle>Booking Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <span className="text-sm text-muted-foreground">Business:</span>
                       <div className="font-medium">{business.name}</div>

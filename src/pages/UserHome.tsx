@@ -301,7 +301,7 @@ const UserHome: React.FC = () => {
     setBookmarkedBusinesses((prev) => {
       const isBookmarked = prev.includes(businessId);
       const updated = isBookmarked ? prev.filter((id) => id !== businessId) : [...prev, businessId];
-      toast.success(isBookmarked ? "Removed from bookmarks" : "Added to bookmarks");
+      toast.success(isBookmarked ? "Removed from marked items" : "Added to marked items");
       return updated;
     });
   };
@@ -349,7 +349,7 @@ const UserHome: React.FC = () => {
             className="text-center mb-8"
           >
             <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              Skip the Wait, Not the Care
+              Skip the Wait, <br /> Not the Care
             </h1>
             <p className="text-xl md:text-2xl opacity-90 max-w-2xl mx-auto">
               Book your spot in line at hospitals, salons, banks, and more.
@@ -501,7 +501,7 @@ const UserHome: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">Bookmarks</span>
+                  <span className="text-sm">Marked</span>
                   <Badge variant="secondary">
                     {bookmarkedBusinesses.length}
                   </Badge>
@@ -551,7 +551,7 @@ const UserHome: React.FC = () => {
             </div>
 
             <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 glass">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto glass-strong p-2 gap-2">
                 <TabsTrigger value="all">
                   All ({filteredBusinesses.length})
                 </TabsTrigger>
@@ -559,7 +559,7 @@ const UserHome: React.FC = () => {
                   Trending ({trendingBusinesses.length})
                 </TabsTrigger>
                 <TabsTrigger value="bookmarks">
-                  Bookmarks ({bookmarkedBusinessData.length})
+                  Marked ({bookmarkedBusinessData.length})
                 </TabsTrigger>
                 <TabsTrigger value="recent">
                   Recent ({recentlyViewedBusinesses.length})
@@ -620,10 +620,10 @@ const UserHome: React.FC = () => {
                   <div className="text-center py-12">
                     <Bookmark className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
                     <h3 className="text-lg font-medium text-muted-foreground mb-2">
-                      No bookmarks yet
+                      No marked items yet
                     </h3>
                     <p className="text-sm text-muted-foreground/75">
-                      Bookmark businesses to save them for later
+                      Mark businesses to save them for later
                     </p>
                   </div>
                 )}

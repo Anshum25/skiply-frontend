@@ -630,7 +630,7 @@ const BusinessDashboard: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-4 mt-4 md:mt-0">
+          <div className="flex flex-wrap items-center gap-4 mt-4 md:mt-0">
             <Button variant="outline">
               <Share2 className="w-4 h-4 mr-2" />
               Share Profile
@@ -643,6 +643,16 @@ const BusinessDashboard: React.FC = () => {
               <Eye className="w-4 h-4 mr-2" />
               Preview
             </Button>
+            <div className="w-full md:w-auto flex items-center gap-4">
+              <Button className="flex-1 md:flex-none">
+                <Plus className="w-4 h-4 mr-2" />
+                Book New
+              </Button>
+              <Button className="flex-1 md:flex-none">
+                <Calendar className="w-4 h-4 mr-2" />
+                Advance Booking
+              </Button>
+            </div>
           </div>
         </div>
 

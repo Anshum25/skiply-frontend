@@ -7,6 +7,7 @@ type User = {
   phone?: string;
   location?: string;
   profileImage?: string;
+  avatar?: string;
   role: "user" | "business" | "admin";
   createdAt?: string;
   updatedAt?: string;

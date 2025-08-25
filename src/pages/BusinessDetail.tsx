@@ -58,7 +58,7 @@ import BusinessMap from "../components/BusinessMap";
 import { cn } from "../lib/utils";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import LiveQueueBooking from "../components/LiveQueueBooking";
+import LiveQueueBookingSection from "../components/LiveQueueBookingSection";
 
 const BusinessDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -70,6 +70,7 @@ const BusinessDetail: React.FC = () => {
 const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [activeSecondTab, setActiveSecondTab] = useState("reviews");
   const [imageError, setImageError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -223,8 +224,7 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
       toast.error("Please log in to book an appointment");
       return;
     }
-    setIsAdvanceBooking(false);
-    setIsBookingModalOpen(true);
+    setActiveTab("live-queue");
   };
 
   // Handler for advance booking
@@ -347,9 +347,9 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
           </Button>
         </div>
 
-        <div className="absolute bottom-6 left-6 right-6">
-          <div className="flex items-end gap-4">
-            <Avatar className="w-16 h-16 border-4 border-white">
+        <div className="absolute bottom-4 md:bottom-6 left-4 right-4 md:left-6 md:right-6">
+          <div className="flex items-end gap-3 md:gap-4">
+            <Avatar className="w-12 h-12 md:w-16 md:h-16 border-2 md:border-4 border-white">
               <AvatarImage
                 src={resolvedImageUrl}
                 alt={business.businessName}
@@ -359,46 +359,48 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
                   }
                 }}
               />
-              <AvatarFallback className="bg-gradient-primary text-white text-xl font-bold">
+              <AvatarFallback className="bg-gradient-primary text-white text-lg md:text-xl font-bold">
                 {business.businessName?.slice(0, 1).toUpperCase()}
               </AvatarFallback>
             </Avatar>
 
             <div className="flex-1 text-white">
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-3xl font-bold">{business.name}</h1>
+              <div className="flex items-center gap-2 mb-0.5">
+                <h1 className="text-2xl md:text-3xl font-bold">{business.name}</h1>
                 {business.isVerified && (
-                  <Badge className="bg-blue-500 text-white">
+                  <Badge className="bg-blue-500 text-white text-xs px-2 py-0.5">
                     <Shield className="w-3 h-3 mr-1" />
                     Verified
                   </Badge>
                 )}
               </div>
 
-              <div className="flex items-center gap-4 text-white/90">
-                <div className="flex items-center gap-1">
-                  <StarRating rating={business.rating} readonly size="sm" />
-                  <span className="font-medium">{business.rating}</span>
-                  <span className="text-sm">
-                    ({business.totalReviews} reviews)
-                  </span>
+              <div className="flex flex-col text-white/90 gap-1">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1">
+                    <StarRating rating={business.rating} readonly size="xs" />
+                    <span className="font-medium text-sm">{business.rating}</span>
+                    <span className="text-xs">
+                      ({business.totalReviews} reviews)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        openStatus ? "bg-green-400" : "bg-red-500"
+                      )}
+                    />
+                    <span className="text-xs font-medium">
+                      {openStatus ? "Open" : "Closed"}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  <span className="text-sm">{business.address}</span>
+                  <MapPin className="w-3 h-3" />
+                  <span className="text-xs">{business.address}</span>
                 </div>
-
-                <Badge
-                  className={cn(
-                    "text-xs",
-                    openStatus
-                      ? "bg-green-500 text-white"
-                      : "bg-gray-500 text-white"
-                  )}
-                >
-                  {openStatus ? "Open Now" : "Closed"}
-                </Badge>
               </div>
             </div>
           </div>
@@ -408,7 +410,7 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
       {/* Quick Actions Bar */}
       <div className="border-b bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-4">
               <Badge
                 variant="outline"
@@ -432,15 +434,15 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
                 )}
                 min wait
               </Badge>
-            </div>
 
-            <div className="flex items-center gap-2">
               {business.contact.phone && (
-                <Button variant="outline" size="sm" onClick={handleCall}>
-                  <Phone className="w-4 h-4 mr-2" />
-                  Call
+                <Button variant="outline" size="icon" onClick={handleCall}>
+                  <Phone className="w-4 h-4" />
                 </Button>
               )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
 
               {business.contact.whatsapp && (
                 <Button
@@ -454,11 +456,11 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
                 </Button>
               )}
 
-              <Button className="btn-gradient" onClick={handleBookNow} disabled={!openStatus} title={!openStatus ? "Business is closed" : undefined}>
+              <Button className="btn-gradient w-full md:w-auto" onClick={handleBookNow} disabled={!openStatus} title={!openStatus ? "Business is closed" : undefined}>
                 <Calendar className="w-4 h-4 mr-2" />
                 Book Now (Live)
               </Button>
-              <Button className="ml-2" variant="outline" onClick={handleAdvanceBook}>
+              <Button className="w-full md:w-auto md:ml-2" variant="outline" onClick={handleAdvanceBook}>
                 <Calendar className="w-4 h-4 mr-2" />
                 Advance Booking
               </Button>
@@ -469,16 +471,12 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-6"
-        >
-          <TabsList className="grid w-full grid-cols-4 glass">
+        {/* First Tab Section - Overview, Queue, Live Queue */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
+          <TabsList className="grid w-full grid-cols-3 gap-1">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="reviews">Reviews</TabsTrigger>
-            <TabsTrigger value="photos">Photos</TabsTrigger>
-            <TabsTrigger value="info">Info</TabsTrigger>
+            <TabsTrigger value="queue">Queue</TabsTrigger>
+            <TabsTrigger value="live-queue">Live Queue</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -802,6 +800,97 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
             />
           </TabsContent>
 
+          <TabsContent value="live-queue" className="space-y-6">
+            <LiveQueueBookingSection
+              business={business}
+              isVisible={true}
+              onClose={() => setActiveTab("overview")}
+            />
+          </TabsContent>
+        </Tabs>
+
+        <hr className="my-6 border-purple-400 dark:border-purple-600" />
+
+        {/* Second Tab Section - Reviews, Photos, Info */}
+        <Tabs value={activeSecondTab} onValueChange={setActiveSecondTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 gap-1">
+            <TabsTrigger value="reviews">Reviews</TabsTrigger>
+            <TabsTrigger value="photos">Photos</TabsTrigger>
+            <TabsTrigger value="info">Info</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="reviews" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <Card className="glass-strong border-0">
+                  <CardHeader>
+                    <CardTitle>Customer Reviews</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {reviews.length > 0 ? (
+                        reviews.map((review: any) => (
+                          <ReviewCard key={review.id} review={review} />
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground">No reviews yet.</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="space-y-6">
+                <Card className="glass-strong border-0">
+                  <CardHeader>
+                    <CardTitle>Rating Overview</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-4">
+                        <div className="text-4xl font-bold">{business.rating}</div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1 mb-2">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={cn(
+                                  "w-4 h-4",
+                                  i < Math.floor(business.rating)
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-gray-300"
+                                )}
+                              />
+                            ))}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Based on {reviews.length} reviews
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="photos" className="space-y-6">
+            <PhotoGallery
+              photos={
+                business.photos?.map((photo: string, index: number) => ({
+                  id: `photo-${index}`,
+                  url: photo,
+                  caption: `${business.name} - Photo ${index + 1}`,
+                  category: index < 2 ? "exterior" : "interior",
+                  uploadedAt: new Date().toISOString(),
+                })) || []
+              }
+              title={`${business.name} Photos`}
+              showCategories
+            />
+          </TabsContent>
+
           <TabsContent value="info" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card className="glass-strong border-0">
@@ -903,15 +992,9 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
         </Tabs>
       </div>
 
-      {/* Show only one modal at a time based on isAdvanceBooking */}
-      {isAdvanceBooking ? (
+      {/* Show only advance booking modal when needed */}
+      {isAdvanceBooking && (
         <AdvanceBookingModal
-          isOpen={isBookingModalOpen}
-          onClose={() => setIsBookingModalOpen(false)}
-          business={business}
-        />
-      ) : (
-        <LiveQueueBooking
           isOpen={isBookingModalOpen}
           onClose={() => setIsBookingModalOpen(false)}
           business={business}

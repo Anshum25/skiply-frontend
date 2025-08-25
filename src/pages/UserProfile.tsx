@@ -66,16 +66,24 @@ const UserProfile: React.FC = () => {
 
   const getStatusColor = (status: QueueBooking["status"]) => {
     switch (status) {
-      case "waiting":
+      case "pending":
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300";
-      case "approved":
+      case "confirmed":
         return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+      case "waiting":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300";
+      case "checked-in":
+        return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300";
       case "in-progress":
         return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300";
       case "completed":
         return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
       case "cancelled":
         return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
+      case "no-show":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
+      case "rescheduled":
+        return "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300";
     }
@@ -200,20 +208,6 @@ const UserProfile: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            My Profile
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Manage your account and view your booking history
-          </p>
-        </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Profile Card */}
@@ -225,8 +219,8 @@ const UserProfile: React.FC = () => {
           >
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 dark:border-gray-700/20 p-6">
               {/* Avatar */}
-              <div className="text-center mb-6">
-                <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="flex items-center space-x-4 mb-6">
+                <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-bold text-2xl">
                     {user?.name
                       ?.split(" ")
@@ -235,16 +229,18 @@ const UserProfile: React.FC = () => {
                       .toUpperCase()}
                   </span>
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {user?.name}
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {user?.email}
-                </p>
-                <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-medium mt-2">
-                  Customer
-                </span>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    {user?.name}
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {user?.email}
+                  </p>
+                </div>
               </div>
+              <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-medium">
+                Customer
+              </span>
 
               {/* Profile Information */}
               {isEditing ? (

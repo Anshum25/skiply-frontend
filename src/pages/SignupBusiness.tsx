@@ -323,11 +323,9 @@ const SignupBusiness: React.FC = () => {
       );
 
       // Success
-      alert(response.data.message);
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      alert(response.data.message + " Please log in to continue.");
       localStorage.removeItem('businessSignupForm');
-      navigate("/dashboard");
+      navigate("/login");
     } catch (error: any) {
       console.error("Signup failed:", error);
       if (error.response) {

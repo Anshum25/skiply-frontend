@@ -106,9 +106,31 @@ const QueueTracker: React.FC = () => {
 
           if (foundBooking) {
             setBooking(foundBooking);
-            setBusiness(foundBusiness);
-            setQueuePosition(foundBooking.queuePosition || 1);
-            setEstimatedWait(foundBooking.estimatedWaitTime || 0);
+            setBusiness(foundBusiness as any);
+            // Fetch real-time status from API if possible
+            const fetchStatus = async (bookingId: string) => {
+              try {
+                const t = localStorage.getItem("token");
+                const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/queues/status/${bookingId}`, {
+                  headers: { "Authorization": `Bearer ${t}` }
+                });
+                if (resp.ok) {
+                  const data = await resp.json();
+                  setQueuePosition((data.peopleAhead ?? 0) + 1);
+                  setEstimatedWait(data.estimatedWaitTime ?? 0);
+                  // If backend provided tokenNumber, keep it on booking state clone
+                  setBooking((prev) => prev ? { ...prev, tokenNumber: data.tokenNumber ?? prev.tokenNumber } as any : prev);
+                } else {
+                  // Fallback to any existing values
+                  setQueuePosition(foundBooking.queuePosition || 1);
+                  setEstimatedWait(foundBooking.estimatedWaitTime || 0);
+                }
+              } catch {
+                setQueuePosition(foundBooking.queuePosition || 1);
+                setEstimatedWait(foundBooking.estimatedWaitTime || 0);
+              }
+            };
+            fetchStatus((foundBooking as any)._id || (foundBooking as any).id);
           } else {
             console.log("Booking not found for ID:", id);
           }
@@ -157,42 +179,54 @@ const QueueTracker: React.FC = () => {
     }
   }, [id, user]);
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh every 30 seconds from backend status
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (booking && queuePosition > 1) {
-        // Simulate queue movement
-        const newPosition = Math.max(
-          1,
-          queuePosition - Math.floor(Math.random() * 2),
-        );
-        setQueuePosition(newPosition);
-        setEstimatedWait(newPosition * 15);
-        setLastUpdated(new Date());
-
-        if (newPosition === 1) {
-          toast.success("🎉 It's your turn! Please proceed to the counter.");
-        } else if (newPosition <= 3) {
-          toast.info("⏰ You're next in line! Please stay nearby.");
+    const interval = setInterval(async () => {
+      if (!booking) return;
+      try {
+        const token = localStorage.getItem("token");
+        const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/queues/status/${(booking as any)._id || (booking as any).id}`, {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          const newPosition = (data.peopleAhead ?? 0) + 1;
+          setQueuePosition(newPosition);
+          setEstimatedWait(data.estimatedWaitTime ?? newPosition * 5);
+          setLastUpdated(new Date());
+          if (newPosition === 1) {
+            toast.success("🎉 It's your turn! Please proceed to the counter.");
+          } else if (newPosition <= 3) {
+            toast.info("⏰ You're next in line! Please stay nearby.");
+          }
         }
+      } catch (e) {
+        // ignore network errors for refresh
       }
     }, 30000);
-
     return () => clearInterval(interval);
-  }, [booking, queuePosition]);
+  }, [booking]);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
+    if (!booking) return;
     setIsLoading(true);
-    setTimeout(() => {
-      const newPosition = Math.max(
-        1,
-        queuePosition - Math.floor(Math.random() * 2),
-      );
-      setQueuePosition(newPosition);
-      setEstimatedWait(newPosition * 15);
-      setLastUpdated(new Date());
+    try {
+      const token = localStorage.getItem("token");
+      const resp = await fetch(`${import.meta.env.VITE_API_URL}/api/queues/status/${(booking as any)._id || (booking as any).id}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        const newPosition = (data.peopleAhead ?? 0) + 1;
+        setQueuePosition(newPosition);
+        setEstimatedWait(data.estimatedWaitTime ?? newPosition * 5);
+        setLastUpdated(new Date());
+      }
+    } catch (e) {
+      // ignore
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const handleCancelBooking = () => {
@@ -222,13 +256,15 @@ const QueueTracker: React.FC = () => {
     return `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
   };
 
-  // Fix progress calculation:
+  // Queue progress: how far you've progressed from initial token to current position.
+  // If your token is T and current position is P (1 = at counter), then progress ~ (T - P) / (T - 1).
   const getProgressPercentage = () => {
-    if (!booking || !booking.tokenNumber || booking.tokenNumber <= 1) return 0;
-    const totalAhead = booking.tokenNumber - 1;
-    const completed = totalAhead - (queuePosition - 1);
-    if (totalAhead <= 0) return 0;
-    return Math.min(100, (completed / totalAhead) * 100);
+    const T = booking?.tokenNumber || 0;
+    const P = queuePosition;
+    if (!T || T <= 1) return 0;
+    const denom = T - 1;
+    const progressed = Math.max(0, Math.min(denom, T - P));
+    return Math.min(100, Math.round((progressed / denom) * 100));
   };
 
   const getStatusColor = () => {
@@ -275,7 +311,7 @@ const QueueTracker: React.FC = () => {
                   return new Date(bookingItem.bookedAt) >= now;
                 })
                 .map((bookingItem) => {
-                const bookingBusiness = bookingItem.business || 
+                const bookingBusiness = (bookingItem as any).business || 
                   mockBusinesses.find((b) => b.id === bookingItem.businessId) || 
                   { name: 'Unknown Business', rating: '4.0' };
                 
@@ -308,7 +344,7 @@ const QueueTracker: React.FC = () => {
                       </h3>
                       
                       <p className="text-sm text-muted-foreground mb-4">
-                        {bookingItem.departmentName || bookingItem.department || 'Department'}
+                        {(bookingItem as any).departmentName || bookingItem.departmentId || 'Department'}
                       </p>
                       
                       <div className="grid grid-cols-3 gap-2 text-xs mb-4">
@@ -333,7 +369,7 @@ const QueueTracker: React.FC = () => {
                         </div>
                       </div>
                       
-                      <Link to={`/queue-tracker/${bookingItem._id || bookingItem.id}`}>
+                      <Link to={`/queue-tracker/${(bookingItem as any)._id || bookingItem.id}`}>
                         <Button className="w-full btn-gradient">
                           <Activity className="w-4 h-4 mr-2" />
                           Track Live Queue
@@ -384,10 +420,10 @@ const QueueTracker: React.FC = () => {
   const detailBusiness = isMock
     ? mockBusinesses.find(b => b.id === booking.businessId)
     : business;
-  const detailDepartment = detailBusiness?.departments?.find(d => d.id === booking.departmentId);
+  const detailDepartment = detailBusiness?.departments?.find(d => d.id === booking?.departmentId);
   const businessImage = detailBusiness?.photos?.[0] || detailBusiness?.images?.[0];
-  const qrValue = booking?.qrCode || booking?.id || booking?._id;
-  const tokenNumber = booking?.tokenNumber || booking?.token || 1;
+  const qrValue = (booking as any)?.qrCode || booking?.id || booking?._id;
+  const tokenNumber = booking?.tokenNumber || 1;
 
   // Use the same image resolution logic as BusinessCard:
   let resolvedImageUrl = "/no-image.jpg";

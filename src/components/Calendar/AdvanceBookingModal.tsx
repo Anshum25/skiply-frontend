@@ -214,7 +214,7 @@ const AdvanceBookingModal: React.FC<AdvanceBookingModalProps> = ({ isOpen, onClo
       // Generate QR code data using the booking response
       const qrData = JSON.stringify({
         bookingId: booking._id,
-        tokenNumber: booking._id, // Use booking ID as token since backend doesn't provide tokenNumber
+        tokenNumber: booking.tokenNumber,
         businessName: booking.businessName,
         departmentName: booking.departmentName,
         customerName: booking.customerName,
@@ -225,7 +225,7 @@ const AdvanceBookingModal: React.FC<AdvanceBookingModalProps> = ({ isOpen, onClo
       // Update booking data with the actual response from server
       setBookingData(prev => ({
         ...prev,
-        tokenNumber: 1, // Default to 1 since backend doesn't provide tokenNumber
+        tokenNumber: booking.tokenNumber,
         estimatedWaitTime: department.estimatedWaitTime,
         bookingId: booking._id,
         qrCode: qrData,
@@ -239,7 +239,7 @@ const AdvanceBookingModal: React.FC<AdvanceBookingModalProps> = ({ isOpen, onClo
       if (onSuccessfulBooking) {
         onSuccessfulBooking({
           bookingId: booking._id,
-          tokenNumber: bookingData.tokenNumber || 1,
+          tokenNumber: booking.tokenNumber,
           date: date ? date.toISOString() : new Date().toISOString(),
           time: time || new Date().toLocaleTimeString(),
           departmentName: bookingData.departmentName || selectedDepartment?.name || "General Service",
@@ -248,7 +248,7 @@ const AdvanceBookingModal: React.FC<AdvanceBookingModalProps> = ({ isOpen, onClo
       }
       
       setStep("success");
-      toast.success("Your booking has been confirmed!");
+      toast.success(`Booking confirmed! Token #${booking.tokenNumber}`);
     } catch (error) {
       console.error("Booking error:", error);
       const errorMessage = error instanceof Error ? error.message : "Booking failed. Please try again.";

@@ -65,6 +65,7 @@ const BusinessDetail: React.FC = () => {
   const { user } = useAuth();
   const [business, setBusiness] = useState<any>(null);
   const [reviews, setReviews] = useState([]);
+  const [liveMetrics, setLiveMetrics] = useState<{ totalInQueue: number; avgWaitMinutes: number; perDepartment?: Record<string, number> } | null>(null);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("");
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
@@ -122,6 +123,18 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
         };
 
         setBusiness(transformedBusiness);
+        // fetch live queue metrics after business is known
+        try {
+          const metricsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/queues/metrics/${fetchedBusiness._id}`);
+          if (metricsRes.ok) {
+            const metrics = await metricsRes.json();
+            setLiveMetrics(metrics);
+          } else {
+            setLiveMetrics(null);
+          }
+        } catch (e) {
+          setLiveMetrics(null);
+        }
         setSelectedDepartment(transformedBusiness.departments[0]?.id || "");
 
         setReviews([]);
@@ -137,6 +150,21 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
       fetchBusiness();
     }
   }, [id]);
+
+  // periodic refresh of live metrics
+  useEffect(() => {
+    if (!business?._id) return;
+    const interval = setInterval(async () => {
+      try {
+        const metricsRes = await fetch(`${import.meta.env.VITE_API_URL}/api/queues/metrics/${business._id}`);
+        if (metricsRes.ok) {
+          const metrics = await metricsRes.json();
+          setLiveMetrics(metrics);
+        }
+      } catch {}
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [business?._id]);
 
   if (loading) {
     return (
@@ -417,7 +445,7 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
                 className={cn("text-sm", queueStatus.color)}
               >
                 <Users className="w-4 h-4 mr-1" />
-                {business.departments.reduce(
+                {liveMetrics?.totalInQueue ?? business.departments.reduce(
                   (total: number, dept: any) => total + dept.currentQueueSize,
                   0
                 )}{" "}
@@ -426,11 +454,11 @@ const [isAdvanceBooking, setIsAdvanceBooking] = useState(false);
 
               <Badge variant="outline" className="text-sm">
                 <Clock className="w-4 h-4 mr-1" />~
-                {Math.round(
+                {liveMetrics?.avgWaitMinutes ?? Math.round(
                   business.departments.reduce(
                     (total: number, dept: any) => total + dept.estimatedWaitTime,
                     0
-                  ) / business.departments.length
+                  ) / Math.max(1, business.departments.length)
                 )}
                 min wait
               </Badge>

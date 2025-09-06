@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,7 @@ function getDistanceInKm(lat1: number, lng1: number, lat2: number, lng2: number)
 export function BusinessCard({ business, index = 0, openNowActive = false }: BusinessCardProps) {
   const category = BUSINESS_CATEGORIES.find((c) => c.value === business.category);
   const { selectedLocationCoords } = useApp();
+  const [metrics, setMetrics] = useState<{ totalInQueue: number; avgWaitMinutes: number } | null>(null);
 
   const businessLat = business.location?.lat;
   const businessLng = business.location?.lng;
@@ -46,10 +47,10 @@ export function BusinessCard({ business, index = 0, openNowActive = false }: Bus
         )
       : null;
 
-  const totalQueueSize =
+  const fallbackTotalQueue =
     business.departments?.reduce((sum, dept) => sum + (dept.currentQueueSize || 0), 0) || 0;
 
-  const averageWaitTime =
+  const fallbackAvgWait =
     business.departments?.length
       ? Math.round(
           business.departments.reduce(
@@ -59,7 +60,25 @@ export function BusinessCard({ business, index = 0, openNowActive = false }: Bus
         )
       : 0;
 
+  const totalQueueSize = metrics?.totalInQueue ?? fallbackTotalQueue;
+  const averageWaitTime = metrics?.avgWaitMinutes ?? fallbackAvgWait;
+
   useEffect(() => {
+    const id = (business as any)._id || (business as any).id;
+    if (!id) return;
+    let mounted = true;
+    const fetchMetrics = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/queues/metrics/${id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (mounted) setMetrics({ totalInQueue: data.totalInQueue, avgWaitMinutes: data.avgWaitMinutes });
+        }
+      } catch {}
+    };
+    fetchMetrics();
+    const interval = setInterval(fetchMetrics, 30000);
+    return () => { mounted = false; clearInterval(interval); };
   }, [selectedLocationCoords, business.location, business.images]);
 
   const resolvedImageUrl =
@@ -75,7 +94,7 @@ export function BusinessCard({ business, index = 0, openNowActive = false }: Bus
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
     >
-      <Link to={`/business/${business._id}`}>
+      <Link to={`/business/${(business as any)._id || (business as any).id}`}>
         <Card className="rounded-lg shadow-md p-0 overflow-hidden border transition transform hover:shadow-lg hover:-translate-y-1">
           <img
             src={resolvedImageUrl}

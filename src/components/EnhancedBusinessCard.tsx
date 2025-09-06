@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -49,26 +49,39 @@ export const EnhancedBusinessCard: React.FC<EnhancedBusinessCardProps> = ({
   const { user } = useAuth();
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [metrics, setMetrics] = useState<{ totalInQueue: number; avgWaitMinutes: number } | null>(null);
 
   const businessImages = business.images || business.photos || [];
 
   console.log("EnhancedBusinessCard business.images:", business.images);
 
-  // Calculate queue statistics
-  const totalCurrentQueue = business.departments.reduce(
-    (total, dept) => total + dept.currentQueueSize,
-    0,
-  );
+  // Calculate queue statistics (fallback if metrics not available)
+  const fallbackTotalQueue = business.departments.reduce((total, dept) => total + (dept.currentQueueSize || 0), 0);
+  const fallbackAvgWait = business.departments.length > 0
+    ? Math.round(business.departments.reduce((total, dept) => total + (dept.estimatedWaitTime || 0), 0) / business.departments.length)
+    : 0;
 
-  const averageWaitTime =
-    business.departments.length > 0
-      ? Math.round(
-          business.departments.reduce(
-            (total, dept) => total + dept.estimatedWaitTime,
-            0,
-          ) / business.departments.length,
-        )
-      : 0;
+  const totalCurrentQueue = metrics?.totalInQueue ?? fallbackTotalQueue;
+  const averageWaitTime = metrics?.avgWaitMinutes ?? fallbackAvgWait;
+
+  useEffect(() => {
+    // fetch live metrics periodically
+    const id = (business as any)._id || (business as any).id;
+    if (!id) return;
+    let isMounted = true;
+    const fetchMetrics = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/queues/metrics/${id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted) setMetrics({ totalInQueue: data.totalInQueue, avgWaitMinutes: data.avgWaitMinutes });
+        }
+      } catch {}
+    };
+    fetchMetrics();
+    const interval = setInterval(fetchMetrics, 30000);
+    return () => { isMounted = false; clearInterval(interval); };
+  }, [business]);
 
   // Check if business is open now
   const isOpenNow = () => {
@@ -178,7 +191,7 @@ export const EnhancedBusinessCard: React.FC<EnhancedBusinessCardProps> = ({
       onHoverEnd={() => setIsHovered(false)}
       className={cn("card-hover", className)}
     >
-      <Link to={`/business/${business.id}`}>
+      <Link to={`/business/${(business as any)._id || (business as any).id}`}>
         <Card className="glass border-0 overflow-hidden group">
           {/* Cover Image */}
           <div className="relative h-48 overflow-hidden bg-gradient-primary">

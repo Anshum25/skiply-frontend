@@ -79,6 +79,8 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
     customerEmail: user?.email || "",
     notes: "",
   });
+  const [previewToken, setPreviewToken] = useState<number | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   // Calculate overall statistics
   const totalQueueSize = business.departments.reduce((total, dept) => total + dept.currentQueueSize, 0);
@@ -114,6 +116,33 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
     }
     
     setCurrentStep("confirm");
+    // Fetch preview token from backend for accurate display
+    if (business && selectedDepartment) {
+      (async () => {
+        try {
+          setPreviewLoading(true);
+          const token = localStorage.getItem("token");
+          const businessId = (business as any).id || (business as any)._id;
+          const params = new URLSearchParams({
+            businessId: String(businessId || ''),
+            departmentName: selectedDepartment.name,
+          });
+          const res = await fetch(`${import.meta.env.VITE_API_URL}/api/queues/next-token?${params.toString()}`, {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setPreviewToken(data.tokenNumber);
+          } else {
+            setPreviewToken((selectedDepartment.currentQueueSize || 0) + 1);
+          }
+        } catch (e) {
+          setPreviewToken((selectedDepartment.currentQueueSize || 0) + 1);
+        } finally {
+          setPreviewLoading(false);
+        }
+      })();
+    }
   };
 
   const handleConfirmBooking = async () => {
@@ -175,7 +204,7 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
       // Generate QR code data using the booking response
       const qrData = JSON.stringify({
         bookingId: booking._id,
-        tokenNumber: booking._id, // Use booking ID as token since backend doesn't provide tokenNumber
+        tokenNumber: booking.tokenNumber,
         businessName: booking.businessName,
         departmentName: booking.departmentName,
         customerName: booking.customerName,
@@ -185,7 +214,7 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
       
       setBookingData(prev => ({
         ...prev,
-        tokenNumber: 1, // Default to 1 since backend doesn't provide tokenNumber
+        tokenNumber: booking.tokenNumber,
         estimatedWaitTime: selectedDepartment.estimatedWaitTime,
         bookingId: booking._id,
         qrCode: qrData,
@@ -194,7 +223,7 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
         departmentName: booking.departmentName,
       }));
       setCurrentStep("success");
-      toast.success("Your booking has been confirmed!");
+      toast.success(`Booking confirmed! Token #${booking.tokenNumber}`);
     } catch (error) {
       console.error("Booking error:", error);
       toast.error(`Booking failed: ${error.message}`);
@@ -578,7 +607,7 @@ const LiveQueueBooking: React.FC<LiveQueueBookingProps> = ({
                     </div>
                     <div>
                       <span className="text-sm text-muted-foreground">Token Number:</span>
-                      <div className="font-medium text-primary">#{selectedDepartment.currentQueueSize + 1}</div>
+                      <div className="font-medium text-primary">#{previewToken ?? (selectedDepartment.currentQueueSize + 1)}</div>
                     </div>
                     <div>
                       <span className="text-sm text-muted-foreground">Estimated Wait:</span>
